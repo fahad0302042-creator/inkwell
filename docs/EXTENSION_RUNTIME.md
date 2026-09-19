@@ -29,7 +29,7 @@ The source client respects its headers, interceptors and cookies. There is no au
 - Keiyoushi xkcd `1.4.17`, package `eu.kanade.tachiyomi.extension.all.xkcd`, English source.
 - APK SHA-256: `74ef6fb112925b86ec44f30624a0cb5b0451095cfc7f1a34a853132c6cc1da99`.
 - The emulator workflow downloads that exact public APK and checks its hash before installation.
-- The test must prove: untrusted load rejected; stale trust rejected; trust + SourceFactory load; live search; details; cover; chapter list; page descriptors; actual image bytes; revocation blocks calls.
+- The test must prove: untrusted load rejected; stale trust rejected; trust + SourceFactory load; search dispatch (xkcd intentionally returns no search matches); popular browsing; details; cover; chapter list; page descriptors; actual image bytes; revocation blocks calls.
 - Passing the Flutter mocked bridge test alone does NOT prove APK compatibility. Consult `docs/VALIDATION.md` for actual device-test results.
 
 ## Not implemented

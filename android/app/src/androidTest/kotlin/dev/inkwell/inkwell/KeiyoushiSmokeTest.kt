@@ -39,9 +39,12 @@ class KeiyoushiSmokeTest {
         assertEquals("74ef6fb112925b86ec44f30624a0cb5b0451095cfc7f1a34a853132c6cc1da99", extension["apkHash"])
         val sources = runtime.trustAndLoad(name, extension["identity"] as String)
         val english = sources.first { it["lang"] == "en" }
-        val result = runtime.search(name, english["id"] as String, "xkcd", 1)
+        // This extension explicitly returns an empty search result; do not invent matches.
+        val search = runtime.search(name, english["id"] as String, "xkcd", 1)
+        assertTrue((search["items"] as List<*>).isEmpty())
+        val result = runtime.search(name, english["id"] as String, "", 1)
         val items = result["items"] as List<*>
-        assertTrue("Real source should return a matching title", items.isNotEmpty())
+        assertTrue("Popular browsing should return an actual title", items.isNotEmpty())
         val manga = items.first() as Map<*, *>
         val mangaHandle = manga["handle"] as String
         val details = runtime.details(mangaHandle)
