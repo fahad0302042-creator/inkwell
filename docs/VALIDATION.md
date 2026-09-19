@@ -26,7 +26,7 @@ Test coverage:
 
 - No physical Android device or Android emulator was used.
 - A local Gradle APK build was attempted, but could not complete within the workspace's 2 GB memory limit. **No APK is included and Android compilation is not claimed as passed.**
-- The GitHub Actions workflow is supplied, but has not been run in your repository. A green workflow run is required before treating APK compilation as verified.
+- The GitHub Actions workflow has been pushed and a run was requested, but its build job did not start. No successful GitHub APK build has been verified. A green workflow run is required before treating APK compilation as verified.
 - Native installed-extension discovery must still be tested on an Android device with a known extension APK. Dart bridge tests use mock messages, not an installed extension.
 - Extension source execution is not implemented, so there is no source compatibility claim.
 
