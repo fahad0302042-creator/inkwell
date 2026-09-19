@@ -11,10 +11,10 @@ for src in files:
     code=urllib.request.urlopen(BASE+src).read().decode()
     # Host-independent equivalent: avoid importing the full app/Compose graph.
     code=code.replace('import androidx.compose.runtime.Stable\n','').replace('@Stable\n','')
-    code=code.replace('import mihon.core.common.extensions.EMPTY\n','').replace('String.EMPTY','""')
+    code=code.replace('import mihon.core.common.extensions.EMPTY\n','').replace('String.EMPTY','""').replace('JsonObject.EMPTY','JsonObject(emptyMap())')
     dst=DEST/src.split('source-api/src/main/kotlin/')[1]
     dst.parent.mkdir(parents=True,exist_ok=True)
-    dst.write_text('// Adapted from Mihon (Apache-2.0), commit '+SHA+'.\n// Inkwell changes: remove app-only annotations/String.EMPTY imports. See THIRD_PARTY_NOTICES.md.\n'+code)
+    dst.write_text('// Adapted from Mihon (Apache-2.0), commit '+SHA+'.\n// Inkwell changes: remove app-only annotations/app EMPTY helpers. See THIRD_PARTY_NOTICES.md.\n'+code)
 for name in ['Requests.kt','HttpException.kt','AndroidCookieJar.kt','ProgressListener.kt','ProgressResponseBody.kt']:
     src='core/common/src/main/kotlin/eu/kanade/tachiyomi/network/'+name
     dst=DEST/'eu/kanade/tachiyomi/network'/name;dst.parent.mkdir(parents=True,exist_ok=True)

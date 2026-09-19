@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -20,6 +20,7 @@ jobs:
           cache: true
       - name: Build Android emulator app
         run: |
+          chmod +x android/gradlew
           flutter pub get --enforce-lockfile
           flutter build apk --debug --target-platform android-x64 --no-pub
       - name: Download hash-pinned xkcd extension

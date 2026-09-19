@@ -173,8 +173,8 @@ class ExtensionRuntime(private val context: Context) {
         val item = resolve(mangas, handle)
         val update = withTimeout(90_000) { item.source.getMangaUpdate(item.value, emptyList(), true, false) }
         // Keep canonical identity if a source only supplies updated fields.
-        if (update.manga.url.isBlank()) update.manga.url = item.value.url
-        if (update.manga.title.isBlank()) update.manga.title = item.value.title
+        if (runCatching { update.manga.url }.getOrDefault("").isBlank()) update.manga.url = item.value.url
+        if (runCatching { update.manga.title }.getOrDefault("").isBlank()) update.manga.title = item.value.title
         if (update.manga.thumbnail_url == null) update.manga.thumbnail_url = item.value.thumbnail_url
         mangas[handle] = item.copy(value = update.manga)
         mangaMap(handle, update.manga)
