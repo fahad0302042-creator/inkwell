@@ -32,6 +32,8 @@ jobs:
           chmod +x android/gradlew
           flutter pub get --enforce-lockfile
           flutter build apk --debug --target-platform android-x64 --no-pub
+      - name: Verify native networking regression
+        run: cd android && ./gradlew :app:testDebugUnitTest -Ptarget-platform=android-x64
       - name: Download hash-pinned xkcd extension
         run: python3 tools/fetch_smoke_extension.py /tmp/inkwell-xkcd.apk
       - name: Enable Android emulator acceleration

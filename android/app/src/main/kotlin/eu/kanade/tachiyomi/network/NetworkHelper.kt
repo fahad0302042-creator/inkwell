@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.network
 import android.content.Context
 import okhttp3.Cache
 import okhttp3.OkHttpClient
-import okhttp3.Protocol
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -12,9 +11,6 @@ class NetworkHelper(context: Context) {
     val cookieJar = AndroidCookieJar()
     val client: OkHttpClient = OkHttpClient.Builder()
         .cookieJar(cookieJar)
-        // Conservative first-host profile: avoid cross-host HTTP/2 connection coalescing
-        // while testing CDNs that return 421 Misdirected Request for coalesced traffic.
-        .protocols(listOf(Protocol.HTTP_1_1))
         .connectTimeout(25, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .callTimeout(60, TimeUnit.SECONDS)

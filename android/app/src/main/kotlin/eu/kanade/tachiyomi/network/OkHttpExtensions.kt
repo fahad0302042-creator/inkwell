@@ -52,8 +52,11 @@ suspend fun Call.awaitSuccess(): Response {
 }
 fun OkHttpClient.newCachelessCallWithProgress(request: Request, listener: ProgressListener, existingSize: Long = 0L): Call =
     newBuilder().cache(null).addNetworkInterceptor { chain ->
-        val outgoing = if (existingSize > 0 && request.header("Range") == null)
-            request.newBuilder().header("Range", "bytes=$existingSize-").build() else request
+        // A network interceptor must preserve BridgeInterceptor's Host, cookies,
+        // connection and encoding headers, not re-use the original application request.
+        val current = chain.request()
+        val outgoing = if (existingSize > 0 && current.header("Range") == null)
+            current.newBuilder().header("Range", "bytes=$existingSize-").build() else current
         val response = chain.proceed(outgoing)
         response.newBuilder().body(ProgressResponseBody(response.body, listener,
             if (response.code == 206) existingSize else 0L)).build()
