@@ -22,11 +22,23 @@ Test coverage:
 11. Non-Android platforms do not invent extension results.
 12. Native bridge errors are surfaced, not silently converted to empty lists.
 
-## Not verified
+## Successful GitHub APK build
+
+- Repository: https://github.com/fahad0302042-creator/inkwell
+- Run: https://github.com/fahad0302042-creator/inkwell/actions/runs/35444820603
+- Built source commit: `cb60c16a4f102cff4be95f54e14523865a385cef`.
+- Build completed successfully on 2026-09-19. Dependency installation, analysis, all 12 tests and Android compilation passed.
+- Separate ARM64, ARM32 and x86-64 debug APKs were uploaded as **Inkwell-test-APKs**. GitHub retains these artifacts for 14 days; rerun the workflow after expiration.
+- ARM64 APK signature verified with Android SDK `apksigner`.
+- APK metadata: `dev.inkwell.inkwell`, version `0.1.0`, minimum API 24 (Android 7.0), target API 36.
+- ARM64 APK SHA-256: `5daacd4d3acdf0c3ba29408a2ac2e206fe78c91d25d152d93997bd7691b32519`.
+
+These are debug-signed development builds, not production releases. The successful compile does not imply that extension-source execution exists.
+
+## Remaining unverified areas
 
 - No physical Android device or Android emulator was used.
-- A local Gradle APK build was attempted, but could not complete within the workspace's 2 GB memory limit. **No APK is included and Android compilation is not claimed as passed.**
-- The GitHub Actions workflow has been pushed and a run was requested, but its build job did not start. No successful GitHub APK build has been verified. A green workflow run is required before treating APK compilation as verified.
+- The earlier local Gradle attempt exceeded the workspace memory limit. Android compilation was subsequently verified on GitHub as recorded above.
 - Native installed-extension discovery must still be tested on an Android device with a known extension APK. Dart bridge tests use mock messages, not an installed extension.
 - Extension source execution is not implemented, so there is no source compatibility claim.
 

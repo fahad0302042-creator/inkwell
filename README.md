@@ -4,6 +4,14 @@ An Android-first Flutter comic-reader **development starter**, with a Kotlin bri
 
 **Not a complete Mihon replacement. It cannot run extension sources yet.** This milestone has no live manga search, remote chapter fetching, download engine or extension repository installer. No third-party extension code is executed.
 
+## Download the test APK
+
+[Successful Android build and APK artifacts](https://github.com/fahad0302042-creator/inkwell/actions/runs/35444820603)
+
+Open **Artifacts → Inkwell-test-APKs**, extract the ZIP, and use `app-arm64-v8a-debug.apk` for most current Android phones. Android 7.0+ is required. ARM32 and x86-64 builds are also included. Artifacts expire after 14 days; the workflow can generate new builds.
+
+Analysis, 12 tests and Android compilation passed. Physical-device testing and extension-source execution remain outstanding.
+
 ## What works
 
 - Adaptive library with saved titles and All / Reading / Unread / Finished filters.
