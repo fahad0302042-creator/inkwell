@@ -1,0 +1,97 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths-ignore: ['**.md']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test and build Inkwell
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Supports both a normal source repository and the phone-only ZIP route.
+      - name: Locate or unpack the project
+        id: project
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f pubspec.yaml ]; then
+            echo "directory=." >> "$GITHUB_OUTPUT"
+          elif [ -f inkwell-source.zip ]; then
+            mkdir -p .ci-app
+            unzip -q inkwell-source.zip -d .ci-app
+            test -f .ci-app/pubspec.yaml
+            echo "directory=.ci-app" >> "$GITHUB_OUTPUT"
+          else
+            echo "Upload inkwell-source.zip to the repository root without renaming it."
+            exit 1
+          fi
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: ${{ steps.project.outputs.directory }}
+        run: flutter pub get --enforce-lockfile
+
+      - name: Check formatting and analyze
+        working-directory: ${{ steps.project.outputs.directory }}
+        run: |
+          dart format --output=none --set-exit-if-changed lib test
+          flutter analyze --no-pub
+
+      - name: Run tests
+        working-directory: ${{ steps.project.outputs.directory }}
+        run: flutter test --no-pub
+
+      - name: Build installable test APKs
+        working-directory: ${{ steps.project.outputs.directory }}
+        run: |
+          chmod +x android/gradlew
+          flutter build apk --debug --split-per-abi --build-number=${{ github.run_number }} --no-pub
+
+      - name: Save APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: Inkwell-test-APKs
+          path: ${{ steps.project.outputs.directory }}/build/app/outputs/flutter-apk/*-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Build summary
+        shell: bash
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
+          ## Inkwell APKs are ready
+          Download **Inkwell-test-APKs** from this run's Artifacts section and extract the ZIP.
+          - **app-arm64-v8a-debug.apk**: most current Android phones.
+          - **app-armeabi-v7a-debug.apk**: older 32-bit ARM phones.
+          - **app-x86_64-debug.apk**: x86-64 Android devices/emulators.
+
+          Requires Android 7.0 or later. Development builds, not store releases.
+          Bundled reading and extension discovery are implemented. Source execution is not.
+          Fresh runners generate a new debug signing key. Updating may require uninstalling the old build, which deletes local data.
+          SUMMARY
