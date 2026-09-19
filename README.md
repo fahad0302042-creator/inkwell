@@ -1,99 +1,78 @@
-# Inkwell
+# Inkwell 0.2 — experimental Keiyoushi host
 
-An Android-first Flutter comic-reader **development starter**, with a Kotlin bridge for inspecting system-installed Mihon/Tachiyomi-style extension APKs.
+Android-first Flutter comic reader with a Kotlin source runtime.
 
-**Version 0.2 is an experimental source host, not a complete Mihon replacement.** It adds trust-gated extension execution, live source browsing and reading. Compatibility must be established per extension; see `docs/VALIDATION.md`. Source filters/settings UI, downloads and the remote-title library are not implemented.
+**First real-APK milestone passed:** Keiyoushi **xkcd 1.4.17, English** loaded and served catalogue, details, chapters, cover and comic/text-image pages on an Android 15 emulator. **This is not a blanket claim of compatibility with every Keiyoushi extension.**
 
-## Previous 0.1 APK (no source execution)
+## Download and try
 
-[Successful Android build and APK artifacts](https://github.com/fahad0302042-creator/inkwell/actions/runs/35444820603)
+- [Verified 0.2 APK build](https://github.com/fahad0302042-creator/inkwell/actions/runs/35476982042) → **Artifacts → Inkwell-test-APKs**.
+- Choose `app-arm64-v8a-debug.apk` for most current Android phones. ARM32 and x86-64 builds are also included. Minimum Android version: 7.0 / API 24.
+- [Keiyoushi installation and testing guide](docs/KEIYOUSHI_TESTING.md).
+- [Passing real-extension emulator tests](https://github.com/fahad0302042-creator/inkwell/actions/runs/35476981105).
 
-Open **Artifacts → Inkwell-test-APKs**, extract the ZIP, and use `app-arm64-v8a-debug.apk` for most current Android phones. Android 7.0+ is required. ARM32 and x86-64 builds are also included. Artifacts expire after 14 days; the workflow can generate new builds.
+These are debug-signed builds. Updating from an older build may require uninstalling it due to changing debug keys; **uninstalling deletes its local data**. Stable release signing is not configured. GitHub artifacts expire after 14 days; workflows can generate new ones.
 
-The linked build is the older 0.1 starter. Do not use it to test the new 0.2 runtime. See the latest Actions run for a new APK and `docs/VALIDATION.md` for its verified status.
+## Implemented
 
-## What works
+- Original offline sample library, details, saved titles, filters, history and progress.
+- RTL, LTR and vertical reading modes, zoom and dark theme.
+- System-installed extension discovery and API 1.4 / 1.6 experimental host targets.
+- Explicit trust tied to package, signing certificates, version and exact APK hash; changed APKs require new approval.
+- Read-only APK snapshots, Source / SourceFactory loading and required host interfaces/models.
+- Context, preferences, JSON, cookies and network services.
+- Native popular/latest/search dispatch, details, chapters, page descriptors and image bytes using the source's own client.
+- Live-source browse/details/reader screens, pagination, errors/retries and saved chapter positions.
+- Certificate inspection, trust revocation and official extension-listing shortcut.
+- GitHub APK build and Android emulator testing workflows.
 
-- Adaptive library with saved titles and All / Reading / Unread / Finished filters.
-- Search over bundled sample titles and genres.
-- Title details and save/remove actions.
-- Four original concept covers and **one shared four-page illustrated story**, included offline and explicitly labelled as samples.
-- Right-to-left, left-to-right and vertical readers, pinch zoom, page navigation and control hiding.
-- Persistent reading position, recently read list, theme and reader preferences.
-- Confirmation before clearing local data.
-- Discovery and explicit trust-gated loading of installed APKs declaring `tachiyomi.extension`.
-- Experimental live source browsing, details, chapter lists and source-authenticated image reading.
-- Source reading positions saved independently of the bundled sample library.
-- Extension package/version/entry-point metadata and SHA-256 signing-certificate fingerprints. Trust is granted only after an explicit APK-specific approval.
-- Android system-settings shortcut, rescan button and rescan when returning to the extension screen.
-- GitHub Actions: static analysis, tests, and separate debug APKs for ARM64, ARM32 and x86-64.
+## Verified scope
 
-## Phone-only build — no PC or token required
+- **15 Flutter tests** pass; static analysis is clean.
+- **1 native networking regression test** passes (preserves Host/encoding/cookie headers through the progress wrapper).
+- **2 Android emulator tests** pass, exercising a real installed xkcd APK and negative trust cases.
+- xkcd intentionally returns no text-search matches. Use **Popular** for this source; the host does not invent search results.
+- API 1.6, other extensions, other languages, interactive xkcd comics and physical phones remain unverified.
 
-Read **[docs/PHONE_SETUP.md](docs/PHONE_SETUP.md)**. Upload `inkwell-source.zip` unchanged to GitHub, then create one workflow file in the browser. The workflow extracts the ZIP on GitHub's runner. GitHub does **not** automatically extract uploaded ZIPs into a repository.
+See [docs/VALIDATION.md](docs/VALIDATION.md) for pinned versions, hashes and exact evidence.
 
-No personal access token or repository secret is required. The workflow uses GitHub's automatically provided read-only repository token. It does not edit your repository or publish a release.
+## Remaining
 
-## Toolchain
+Remote-title library/database, source preference and custom-filter UI, JavaScript, verification-page interaction, download queue, extension repository/index management, in-app installation/updates, private extension import, background chapter updates and stable production signing.
 
-- Flutter **3.47.5**, Dart **3.13.4** (pinned in CI).
-- Java **21** for Gradle; app JVM bytecode target 17.
-- Android SDK/NDK versions selected by this Flutter version.
-- Minimum Android **7.0 / API 24**.
-- Riverpod for state; SharedPreferences for the small starter's local state.
+The main Library tab still manages bundled samples. Live titles are accessed through Browse → Extensions. Source chapter positions are stored locally, but adding those titles to the main library is not implemented.
 
-A production catalogue and download queue should migrate to SQLite/Drift; preferences are not a production catalogue database.
+## Security and distribution
 
-### Optional local commands
+Extension APKs run **in-process with the app's permissions, not in a sandbox**. Only trust publishers you are willing to grant access to app data and networking. Revoking trust blocks new host calls; restart Inkwell to fully unload code already started. There is no automatic trust or APK installation.
+
+`QUERY_ALL_PACKAGES` enables arbitrary system-extension discovery and is restricted by Google Play policy; this prototype is for sideloading/development. Internet permission enables source requests. Package information stays on-device; there is no account/analytics service. Android backup is disabled.
+
+No automatic challenge solving or access-control bypass is implemented. Images are capped at 16 MB and page lists at 2,000 pages in this preview. Expired native session handles require reopening a title from the source.
+
+## Build
+
+Flutter **3.47.5**, Dart **3.13.4**, Java **21** (JVM bytecode target 17). Android toolchain versions are chosen by Flutter.
 
 ```sh
 flutter pub get --enforce-lockfile
 flutter analyze
 flutter test
-flutter run
 flutter build apk --debug --split-per-abi
 ```
 
-APK outputs: `build/app/outputs/flutter-apk/`.
+Workflows:
+- `Build Android APK`: analysis, Flutter tests, APK compilation and artifacts.
+- `Keiyoushi runtime smoke test`: native networking regression and real installed-extension tests on Android 35. It downloads a pinned, hash-checked xkcd APK into the test runner only.
 
-## Architecture
+[Phone-only setup](docs/PHONE_SETUP.md) is available for creating another repository without a PC. No personal token is required by either workflow. Never commit a token, signing password or keystore.
 
-```text
-lib/
-  core/catalog.dart       Original sample catalogue
-  core/store.dart         Library / history / reader persistence
-  features/shell.dart     Library, Browse, History, adaptive navigation
-  features/details.dart   Title details and library actions
-  features/reader.dart    Paged/vertical reading and zoom
-  features/extensions_screen.dart
-  features/settings.dart
-  platform/extensions.dart     Typed Dart-side discovery bridge
-android/app/src/main/kotlin/dev/inkwell/inkwell/MainActivity.kt
-  Method-channel dispatch to the experimental native runtime
-```
+## Architecture and licences
 
-Channel: `dev.inkwell/extensions`. Implemented calls: `listInstalled`, `openAppSettings`, `capabilities`. Source execution uses native session handles; errors and missing host APIs are surfaced explicitly. See [docs/EXTENSION_RUNTIME.md](docs/EXTENSION_RUNTIME.md).
+- `lib/core/`: sample state and persistence.
+- `lib/features/source_screens.dart`: live browse/details/reader screens.
+- `lib/platform/extensions.dart`: typed Dart method-channel contract.
+- `android/.../runtime/`: APK inspection, trust, class loading, native object handles and source operations.
+- `android/.../eu/kanade/tachiyomi/`: host API, models and network compatibility.
 
-## Permissions and distribution
-
-`QUERY_ALL_PACKAGES` is requested to discover arbitrary extension package names. This broad visibility is restricted by Google Play policy; approval is not guaranteed. This is a sideload/development design. A future import-based design may avoid this permission. Package information stays on the device. Backups are disabled; there is no analytics or account service.
-
-The app does not download/install extensions, request APK-install permission, or automatically trust discovered packages. Install only APKs from developers you trust.
-
-CI produces **debug-signed test APKs**. Clean runners can create different debug signing keys. Installing over an earlier build may fail; uninstalling removes its library and progress. Production releases need a stable private keystore and a deliberate release-signing setup. Never commit a keystore, personal token or signing password.
-
-## Remaining after the 0.2 runtime prototype
-
-1. Establish the real-APK Android test matrix, starting with Keiyoushi xkcd.
-2. Add source settings, custom filters and interactive verification where appropriate.
-3. Add a database-backed remote library, persistent downloads and background updates.
-4. Expand compatibility using device evidence, rather than promising every extension.
-5. Configure stable private release signing and physical-device testing.
-
-See [docs/VALIDATION.md](docs/VALIDATION.md) for verification and remaining limitations.
-
-## Notices
-
-Lora and DM Sans fonts use SIL Open Font License 1.1. Their licence files are in `assets/fonts/` and registered on the in-app licence page. Flutter packages retain their own licences.
-
-Original sample artwork/story: `tools/draw_samples.py` (Pillow and DejaVu fonts are needed only to regenerate PNGs). No manga scans or extension binaries are bundled. Selected Mihon source API implementations are included under Apache-2.0; see `THIRD_PARTY_NOTICES.md`.
+Mihon API sources are pinned and adapted under Apache-2.0; [third-party notices](THIRD_PARTY_NOTICES.md) and licence text are retained. Lora and DM Sans fonts use SIL OFL 1.1; licences are bundled and shown in-app. Other dependencies retain their licences. Original sample PNGs are generated by `tools/draw_samples.py`; no third-party manga scans or extension APKs are bundled in Inkwell.

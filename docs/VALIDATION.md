@@ -1,68 +1,62 @@
-# Version 0.2 verification in progress
+# Version 0.2 verification
 
-- Local Flutter analysis: clean.
-- Local Flutter tests: 15 passed, including a mocked source-search-to-reader flow.
-- Android compilation and real-APK emulator testing: pending the new GitHub workflows.
-- No claim of Keiyoushi compatibility is made until the real-APK test passes.
+## Build and source revision
 
----
+Verified source: `6b6f0f317a2ae3bd3905cd88751be9bb805c910e`.
 
-# Archived 0.1 starter verification
+- [APK build: passed](https://github.com/fahad0302042-creator/inkwell/actions/runs/35476982042)
+- [Native and Android emulator tests: passed](https://github.com/fahad0302042-creator/inkwell/actions/runs/35476981105)
+- The repository's later documentation-only commit does not change the tested application code.
+- ARM64 APK SHA-256: `b8bf6a3a306f3315d39ec5549cc7b68535afb5a5c29ea6f45182330fd88c226f`.
+- APK archive integrity and ARM64 Flutter payload verified after downloading from GitHub.
+- APK minimum Android API: 24; instrumentation device: API 35 (Android 15), x86-64 emulator. No physical-phone execution is claimed.
 
-# Verification record
+## Flutter: 15 passing tests
 
-## Passed in the development workspace
+Original library/reader/history/settings tests, serialization and corrupt-storage recovery, persistence/reset, bridge decoding/errors, string transport for 64-bit source IDs, reviewed APK-identity transmission, and a **mocked** live-source UI flow from catalogue through reader with saved progress.
 
-- Flutter 3.47.5 / Dart 3.13.4 dependency resolution.
-- `flutter analyze --no-pub`: **no issues found**.
-- `flutter test --no-pub`: **12 tests passed**.
-- GitHub workflow syntax checked with `actionlint 1.7.7`: **passed**.
+Flutter analysis: no issues found. Mocked Flutter tests are not used as proof of actual extension compatibility.
 
-Test coverage:
+## Native JVM: 1 passing networking regression test
 
-1. Phone library → reader → page navigation → saved history.
-2. Small 320×640 layout and no-match sample search.
-3. Wide layout and explicit extension-runtime status.
-4. Switching RTL → vertical → LTR preserves the current page.
-5. Theme setting and cancelling the reset confirmation.
-6. Vertical reading through to the final page.
-7. State serialization round trip.
-8. Recovery from corrupt preferences.
-9. Bookmark/progress/theme/mode persistence and reset.
-10. Dart method-channel decoding of Android metadata (mocked native response).
-11. Non-Android platforms do not invent extension results.
-12. Native bridge errors are surfaced, not silently converted to empty lists.
+A MockWebServer test confirms that the source image progress wrapper preserves the real network request's Host, Cookie and Accept-Encoding headers and reports byte progress. An earlier implementation incorrectly reused the pre-bridge request and received HTTP 421 during real image testing. The final implementation preserves `chain.request()`; the fix is covered by this regression.
 
-## Successful GitHub APK build
+## Real Android APK: 2 passing instrumentation tests
 
-- Repository: https://github.com/fahad0302042-creator/inkwell
-- Run: https://github.com/fahad0302042-creator/inkwell/actions/runs/35444820603
-- Built source commit: `cb60c16a4f102cff4be95f54e14523865a385cef`.
-- Build completed successfully on 2026-09-19. Dependency installation, analysis, all 12 tests and Android compilation passed.
-- Separate ARM64, ARM32 and x86-64 debug APKs were uploaded as **Inkwell-test-APKs**. GitHub retains these artifacts for 14 days; rerun the workflow after expiration.
-- ARM64 APK signature verified with Android SDK `apksigner`.
-- APK metadata: `dev.inkwell.inkwell`, version `0.1.0`, minimum API 24 (Android 7.0), target API 36.
-- ARM64 APK SHA-256: `5daacd4d3acdf0c3ba29408a2ac2e206fe78c91d25d152d93997bd7691b32519`.
+The emulator installed the **actual Keiyoushi xkcd 1.4.17 APK**, not a rewritten source or mock:
 
-These are debug-signed development builds, not production releases. The successful compile does not imply that extension-source execution exists.
+- Package: `eu.kanade.tachiyomi.extension.all.xkcd`.
+- Language exercised: English.
+- Extension API: 1.4.
+- APK SHA-256: `74ef6fb112925b86ec44f30624a0cb5b0451095cfc7f1a34a853132c6cc1da99`.
+- Download URL and hash are pinned in `tools/fetch_smoke_extension.py`.
 
-## Remaining unverified areas
+### Negative trust test
 
-- No physical Android device or Android emulator was used.
-- The earlier local Gradle attempt exceeded the workspace memory limit. Android compilation was subsequently verified on GitHub as recorded above.
-- Native installed-extension discovery must still be tested on an Android device with a known extension APK. Dart bridge tests use mock messages, not an installed extension.
-- Extension source execution is not implemented, so there is no source compatibility claim.
+- Installed package detected without executing it.
+- Untrusted source loading rejected.
+- Stale/mismatched APK-identity approval rejected.
 
-## Suggested Android acceptance test after the first green GitHub build
+### Real source-flow test
 
-1. Install the matching ABI test APK on Android 7.0+.
-2. Check both themes and all four navigation destinations.
-3. Read a sample, close/reopen the app, and verify the saved page.
-4. Try RTL, LTR, vertical scrolling and pinch zoom.
-5. Add/remove a sample title and verify filters/history.
-6. Browse → Extensions: compare detected packages with those installed on the device.
-7. Verify displayed signing fingerprints independently before any future trust implementation.
-8. Install/remove an extension using Android's installer, return to the Extensions screen and rescan.
-9. Test clear-data confirmation. Uninstalling the app or using Reset deletes local reading state.
+- User-equivalent explicit test trust and real SourceFactory loading.
+- English source selection and source-ID handling.
+- Search dispatch: xkcd deliberately returns an empty result; this is respected, not replaced with fabricated matches.
+- Popular browsing returns a real title.
+- Manga details and source-authenticated cover bytes.
+- A real chapter list containing more than ten entries.
+- Page descriptors for the first comic.
+- Both the comic image and extension-generated text-image bytes returned successfully.
+- Revocation blocks subsequent host source calls.
 
-Production readiness additionally requires stable signing, a source engine, security/licence review, database-backed storage, durable downloads, accessibility testing and broader Android device testing.
+The final device report records **2 tests, 0 failures, 0 errors, 0 skipped**. Native runtime behavior was tested directly through the same runtime used by the Flutter channel; physical-device UI interaction remains unverified.
+
+## Not verified / not implemented
+
+- Other Keiyoushi extensions, API 1.6 sources, other xkcd translations, interactive comics, older Android releases and physical devices.
+- The source preference/filter UI, JavaScript, verification-page interaction, network downloads, private extension imports and remote-title library/database are not implemented.
+- Production signing, long-running background behavior and security isolation are not implemented. Third-party code executes with host app privileges.
+
+## Previous milestone
+
+The older 0.1 APK at [run 35444820603](https://github.com/fahad0302042-creator/inkwell/actions/runs/35444820603) is a sample-reader/discovery-only build. It must not be used to test source execution.

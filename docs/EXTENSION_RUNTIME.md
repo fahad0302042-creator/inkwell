@@ -1,6 +1,6 @@
 # Experimental Keiyoushi host (0.2)
 
-## Implemented, awaiting the device-test matrix below
+## Implemented — first real-APK test passed
 
 - Vendored, pinned Mihon source API implementations (not the throwing compile stubs), with Apache-2.0 notices preserved.
 - API declarations 1.4 and 1.6 accepted as experimental targets. This does not mean every extension is compatible.
@@ -30,7 +30,7 @@ The source client respects its headers, interceptors and cookies. There is no au
 - APK SHA-256: `74ef6fb112925b86ec44f30624a0cb5b0451095cfc7f1a34a853132c6cc1da99`.
 - The emulator workflow downloads that exact public APK and checks its hash before installation.
 - The test must prove: untrusted load rejected; stale trust rejected; trust + SourceFactory load; search dispatch (xkcd intentionally returns no search matches); popular browsing; details; cover; chapter list; page descriptors; actual image bytes; revocation blocks calls.
-- Passing the Flutter mocked bridge test alone does NOT prove APK compatibility. Consult `docs/VALIDATION.md` for actual device-test results.
+- The two Android instrumentation tests passed in run https://github.com/fahad0302042-creator/inkwell/actions/runs/35476981105. Flutter mocks are not used as APK compatibility evidence. Consult `docs/VALIDATION.md` for the exact verified scope.
 
 ## Not implemented
 

@@ -65,7 +65,7 @@ Artifacts are retained for 14 days. Run the workflow again if they expire.
 - Settings → Dark theme.
 - Browse → Extensions → inspect any system-installed extension packages.
 
-**Finding an extension does not mean it can run.** Source execution is not built yet, so live source search, chapter fetching and network downloads do not work in this milestone. Private extensions stored inside Mihon are not visible as system packages.
+**Version 0.2 adds experimental source execution.** See [Keiyoushi testing instructions](KEIYOUSHI_TESTING.md) and [the verification matrix](VALIDATION.md). Finding a package does not guarantee compatibility. Private extensions stored inside Mihon are not visible as system packages.
 
 ## Future updates
 
