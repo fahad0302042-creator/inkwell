@@ -2,6 +2,7 @@
     <!-- Sideload prototype: broad visibility is needed for arbitrary extension package names.
          Review Play policy before distribution. No package list is sent off-device. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="Inkwell"
         android:name="${applicationName}"

@@ -2,6 +2,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven("https://jitpack.io") { content { includeGroup("com.github.null2264.injekt") } }
     }
 }
 

@@ -91,5 +91,15 @@ class LibraryController extends Notifier<LibraryState> {
   );
   Future<void> setMode(ReaderMode mode) => _commit(state.copyWith(mode: mode));
   Future<void> setDark(bool dark) => _commit(state.copyWith(dark: dark));
-  Future<void> reset() => _commit(const LibraryState(saved: {}));
+  Future<void> reset() async {
+    final prefs = ref.read(preferencesProvider);
+    for (final key in prefs.getKeys().where(
+      (k) => k.startsWith('source.progress.'),
+    )) {
+      if (!await prefs.remove(key)) {
+        throw StateError('Could not clear source progress');
+      }
+    }
+    await _commit(const LibraryState(saved: {}));
+  }
 }

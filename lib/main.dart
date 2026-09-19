@@ -10,6 +10,9 @@ import 'features/shell.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks([
+      "Mihon source API",
+    ], await rootBundle.loadString("assets/licenses/Mihon-Apache-2.0.txt"));
     for (final family in ['Lora', 'DMSans']) {
       final license = await rootBundle.loadString(
         'assets/fonts/$family-OFL.txt',

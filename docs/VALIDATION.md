@@ -1,3 +1,14 @@
+# Version 0.2 verification in progress
+
+- Local Flutter analysis: clean.
+- Local Flutter tests: 15 passed, including a mocked source-search-to-reader flow.
+- Android compilation and real-APK emulator testing: pending the new GitHub workflows.
+- No claim of Keiyoushi compatibility is made until the real-APK test passes.
+
+---
+
+# Archived 0.1 starter verification
+
 # Verification record
 
 ## Passed in the development workspace

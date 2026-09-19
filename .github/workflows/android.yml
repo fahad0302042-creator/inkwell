@@ -92,6 +92,6 @@ jobs:
           - **app-x86_64-debug.apk**: x86-64 Android devices/emulators.
 
           Requires Android 7.0 or later. Development builds, not store releases.
-          Bundled reading and extension discovery are implemented. Source execution is not.
+          Experimental API 1.4/1.6 source execution is included. Check docs/VALIDATION.md for the tested extension matrix.
           Fresh runners generate a new debug signing key. Updating may require uninstalling the old build, which deletes local data.
           SUMMARY

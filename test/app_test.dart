@@ -79,7 +79,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Extensions'));
     await tester.pumpAndSettle();
-    expect(find.text('Discovery is ready. Execution is not.'), findsOneWidget);
+    expect(find.text('Experimental extension runtime'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets('Reader mode changes preserve the current page', (tester) async {

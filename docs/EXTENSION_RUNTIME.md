@@ -1,49 +1,45 @@
-# Extension runtime: implementation boundary
+# Experimental Keiyoushi host (0.2)
 
-## Implemented
+## Implemented, awaiting the device-test matrix below
 
-Kotlin reads installed-package metadata through Android's PackageManager on a worker thread. A package must declare the `tachiyomi.extension` feature. Flutter receives primitives through `dev.inkwell/extensions`:
+- Vendored, pinned Mihon source API implementations (not the throwing compile stubs), with Apache-2.0 notices preserved.
+- API declarations 1.4 and 1.6 accepted as experimental targets. This does not mean every extension is compatible.
+- Android package discovery, Source / SourceFactory class loading, semicolon-separated entry points.
+- Explicit trust bound to package, version, signing certificates AND SHA-256 of the APK. Changes require new approval.
+- Read-only verified APK snapshot before loading. No extension code is initialized during discovery.
+- Source-scoped preferences, Application / Context / Json / NetworkHelper injection, OkHttp networking and cookie support.
+- Native popular/latest/search, manga details, chapters, page descriptors and image bytes through the source's own client.
+- Live Flutter browse/details/reader screens, retries, pagination and locally saved chapter positions.
+- Images are limited to 16 MB and page lists to 2,000 pages for this preview.
+- Revocation blocks further host calls. Restart the app to fully unload third-party code already started.
 
-```text
-listInstalled -> [{name, packageName, version, entryPoint,
-                   fingerprints: [SHA256], nsfw, runtimeAvailable: false}]
-openAppSettings({packageName}) -> null
-capabilities -> {discovery: true, sourceExecution: false,
-                 privateExtensions: false, protocolVersion: 1}
-```
+Channel `dev.inkwell/extensions`, protocol version 2:
+`listInstalled`, `trustAndLoad`, `revokeTrust`, `sources`, `search`, `details`, `chapters`, `pages`, `image`, `capabilities`, `openAppSettings`, `openExtensionWebsite`.
 
-Entry-point lookup: `tachiyomi.extension.class`, then `tachiyomi.extension.factory`. The inspector reports declarations; it does not instantiate them or claim supported API compatibility. Multiple entry points/factory behavior are not interpreted. No fingerprint is automatically trusted.
+Source IDs travel as strings. Manga/chapter/page objects stay in native session handles, retaining source-specific metadata. Handles can expire when the app process restarts; reopen the title from the source if that happens.
 
-`search`, `chapters`, `pages`, `sources` explicitly return `RUNTIME_NOT_IMPLEMENTED`. Unknown methods receive the standard not-implemented response.
+## Important security boundary
+
+This is **in-process executable APK loading, not a sandbox**. A trusted extension has the app's permissions and can access its data/network. Pinning an APK hash prevents silent replacement; it does not make arbitrary code safe. No APK is automatically trusted and no APK installer is built into Inkwell.
+
+The source client respects its headers, interceptors and cookies. There is no automatic verification-page solving or JavaScript engine; these sources may fail and should be reported as unsupported. The compatibility layer does not bypass source access controls.
+
+## First real-APK test target
+
+- Keiyoushi xkcd `1.4.17`, package `eu.kanade.tachiyomi.extension.all.xkcd`, English source.
+- APK SHA-256: `74ef6fb112925b86ec44f30624a0cb5b0451095cfc7f1a34a853132c6cc1da99`.
+- The emulator workflow downloads that exact public APK and checks its hash before installation.
+- The test must prove: untrusted load rejected; stale trust rejected; trust + SourceFactory load; live search; details; cover; chapter list; page descriptors; actual image bytes; revocation blocks calls.
+- Passing the Flutter mocked bridge test alone does NOT prove APK compatibility. Consult `docs/VALIDATION.md` for actual device-test results.
 
 ## Not implemented
 
-- Extension class loading, Source/SourceFactory instantiation, host libraries or API-version validation.
-- OkHttp/Jsoup/RxJava/coroutine/service-locator compatibility dependencies.
-- Preferences, cookies, WebView verification, source interceptors or authenticated image requests.
-- Certificate trust store, repository verification, APK installation or private extension storage.
-- Live source search/details/chapters/pages, network downloads or background updates.
-- A real-device compatibility matrix.
+Extension repository indexing/install/update management (the app opens the official listing in your browser), source settings UI, custom filters UI, JavaScript, verification-page interaction, native non-HttpSource image loading, offline download queue, remote-title library database, background updates, cloud sync and stable production signing.
 
-A Flutter bridge alone cannot solve these. Source-interface stubs do not provide the extension's complete host environment.
+The new Keiyoushi repository advertises a compressed Protobuf index. The old JSON index now contains app-update notices. Inkwell does not misinterpret those notices as manga sources.
 
-## Planned source protocol
+## Provenance
 
-Before exposing live sources, version a protocol for source listing, search with pagination, manga details, chapters, page descriptors, authenticated image bytes/native cache URIs, and request cancellation. Keep 64-bit source identities as **strings** across transports. Preserve source-specific headers, cookies and referers rather than asking Dart to re-fetch a naked image URL.
-
-## Security requirements before executing an APK
-
-1. Verify manifest, supported host API, package version and signing identity before class loading.
-2. Require explicit certificate-based trust; recheck updates. Never transfer trust by display name alone.
-3. Pin the host ABI and test one openly licensed extension end-to-end before expanding.
-4. A JVM class loader is **not a sandbox**: loaded code normally has the app's privileges. An Android isolated process is a separate architecture with IPC and networking trade-offs.
-5. Private APK support needs safe paths, signature continuity, read-only dynamic code where Android requires it, and replacement/uninstall cleanup.
-6. Do not log auth credentials/cookies, redistribute copyrighted content or bypass source access controls.
-7. Audit reused runtime code and dependency licences before distribution.
-
-## Reference
-
-The scanner was independently implemented using Android APIs and public extension-manifest conventions visible in the upstream loader:
-https://github.com/mihonapp/mihon/blob/main/app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt
-
-No upstream source engine is bundled or claimed as implemented.
+Mihon host API pin: `424bbc53b85c19acd3c3b7c03ec6f73f516f25bc`.
+Keiyoushi source inspected at `9137b65daada0b328a05e7c3ce8c4490bbd90dac`.
+See `THIRD_PARTY_NOTICES.md` and `tools/vendor_host_api.py`.

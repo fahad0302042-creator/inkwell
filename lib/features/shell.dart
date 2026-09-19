@@ -89,7 +89,7 @@ class _AppShellState extends State<AppShell> {
                       ),
                     ),
                     const SizedBox(height: 22),
-                    const Eyebrow('Inkwell / v0.1'),
+                    const Eyebrow('Inkwell / v0.2'),
                   ],
                 ),
               ),
@@ -355,7 +355,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           ComicGrid(items: items),
         const SizedBox(height: 22),
         const Text(
-          'BUNDLED SAMPLES  /  NO CONNECTED SOURCES',
+          'SAMPLE LIBRARY  /  LIVE SOURCES UNDER BROWSE',
           style: TextStyle(fontSize: 9, letterSpacing: 1.7, color: Colors.grey),
         ),
       ],

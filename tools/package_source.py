@@ -5,7 +5,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 root = Path(__file__).resolve().parents[1]
 output = root.parent / 'inkwell-source.zip'
 allowed_dirs = {'lib', 'test', 'assets', 'android', 'docs', 'tools', '.github'}
-allowed_files = {'README.md', 'pubspec.yaml', 'pubspec.lock', 'analysis_options.yaml', '.gitignore', '.metadata'}
+allowed_files = {'README.md', 'THIRD_PARTY_NOTICES.md', 'pubspec.yaml', 'pubspec.lock', 'analysis_options.yaml', '.gitignore', '.metadata'}
 excluded_parts = {'.gradle', '.dart_tool', '.idea', '.cxx', 'build', 'node_modules', '__pycache__'}
 excluded_names = {'local.properties', 'key.properties', 'GeneratedPluginRegistrant.java'}
 with ZipFile(output, 'w', ZIP_DEFLATED) as archive:

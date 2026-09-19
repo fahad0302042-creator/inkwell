@@ -93,15 +93,15 @@ class SettingsScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 30),
         const Notice(
-          'Inkwell · Development starter 0.1',
-          'Flutter + Kotlin. Sample reading and installed-extension discovery are implemented. Extension execution, network downloads, repositories and background updates are future work.',
+          'Inkwell · Experimental runtime 0.2',
+          'Flutter + Kotlin. Experimental extension browsing and online reading. Compatibility depends on the source. Offline downloads, live library storage, source settings, JavaScript and background updates are future work.',
         ),
         const SizedBox(height: 12),
         TextButton(
           onPressed: () => showLicensePage(
             context: context,
             applicationName: 'Inkwell',
-            applicationVersion: '0.1.0',
+            applicationVersion: '0.2.0',
             applicationLegalese: 'Original bundled sample artwork and story.',
           ),
           child: const Text('Open-source licences'),
