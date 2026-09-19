@@ -53,6 +53,15 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Cache Android build dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-inkwell-gradle-v1-${{ hashFiles('android/**/*.gradle.kts', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-inkwell-gradle-v1-
+
       - name: Install dependencies
         working-directory: ${{ steps.project.outputs.directory }}
         run: flutter pub get --enforce-lockfile
