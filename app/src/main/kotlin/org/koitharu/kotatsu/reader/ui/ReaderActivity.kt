@@ -103,6 +103,8 @@ class ReaderActivity :
 		get() = readerManager.currentMode
 
 	private lateinit var scrollTimer: ScrollTimer
+	private lateinit var autoPlayTimer: AutoPlayTimer
+	private var lastUiState: ReaderUiState? = null
 	private lateinit var pageSaveHelper: PageSaveHelper
 	private lateinit var touchHelper: TapGridDispatcher
 	private lateinit var controlDelegate: ReaderControlDelegate
@@ -117,6 +119,7 @@ class ReaderActivity :
 		setDisplayHomeAsUp(isEnabled = true, showUpAsClose = false)
 		touchHelper = TapGridDispatcher(viewBinding.root, this)
 		scrollTimer = scrollTimerFactory.create(resources, this, this)
+		autoPlayTimer = autoPlayTimerFactory.create(this, this)
 		pageSaveHelper = pageSaveHelperFactory.create(this)
 		controlDelegate = ReaderControlDelegate(resources, settings, tapGridSettings, this)
 		viewBinding.zoomControl.listener = this
@@ -128,6 +131,14 @@ class ReaderActivity :
 		scrollTimer.isActive.observe(this) {
 			updateScrollTimerButton()
 			viewBinding.actionsView.setTimerActive(it)
+		}
+		// Fork (Ktv): tell the user when auto-play switches on or off — with no touch input there is
+		// otherwise nothing on screen that confirms the press was registered.
+		autoPlayTimer.isActive.observe(this) { isActive ->
+			viewBinding.toastView.showTemporary(
+				getString(if (isActive) R.string.auto_play_enabled else R.string.auto_play_disabled),
+				TOAST_DURATION,
+			)
 		}
 		viewBinding.timerControl.onVisibilityChangeListener = this
 		viewBinding.timerControl.attach(scrollTimer, this)
@@ -408,6 +419,29 @@ class ReaderActivity :
 		readerManager.currentReader?.switchPageBy(delta)
 	}
 
+	// Fork (Ktv): auto-play. Ticked by AutoPlayTimer on the configured interval; this is the only
+	// place that knows what "the end of the chapter" means.
+	override fun toggleAutoPlay() {
+		autoPlayTimer.toggle()
+	}
+
+	override fun onAutoPlayTick() {
+		val uiState = lastUiState ?: return
+		when {
+			uiState.currentPage < uiState.totalPages - 1 -> {
+				readerManager.currentReader?.switchPageBy(1)
+			}
+
+			settings.isReaderAutoPlayContinueChapter && uiState.hasNextChapter() -> {
+				viewModel.switchChapterBy(1)
+			}
+
+			else -> {
+				autoPlayTimer.setActive(false)
+			}
+		}
+	}
+
 	override fun switchChapterBy(delta: Int) {
 		viewModel.switchChapterBy(delta)
 	}
@@ -475,6 +509,8 @@ class ReaderActivity :
 
 	private fun onUiStateChanged(pair: Pair<ReaderUiState?, ReaderUiState?>) {
 		val (previous: ReaderUiState?, uiState: ReaderUiState?) = pair
+		// Fork (Ktv): auto-play needs to know the current position to detect the chapter end.
+		lastUiState = uiState
 		title = uiState?.mangaName ?: getString(R.string.loading_)
 		viewBinding.infoBar.update(uiState)
 		if (uiState == null) {

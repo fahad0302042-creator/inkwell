@@ -177,4 +177,20 @@
 		android:title="@string/preload_pages"
 		app:useSimpleSummaryProvider="true" />
 
+	<!-- Fork (Ktv): auto-play, driven by the play/pause button on a TV remote. -->
+	<SwitchPreferenceCompat
+		android:defaultValue="true"
+		android:key="reader_autoplay_continue"
+		android:summary="@string/reader_autoplay_continue_summary"
+		android:title="@string/reader_autoplay_continue" />
+
+	<org.koitharu.kotatsu.settings.utils.SliderPreference
+		android:key="reader_autoplay_interval"
+		android:stepSize="1"
+		android:title="@string/reader_autoplay_interval"
+		android:valueFrom="1"
+		android:valueTo="30"
+		app:allowDividerAbove="true"
+		app:defaultValue="5" />
+
 </PreferenceScreen>

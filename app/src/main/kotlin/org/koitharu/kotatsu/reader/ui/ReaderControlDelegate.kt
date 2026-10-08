@@ -77,6 +77,12 @@ class ReaderControlDelegate(
 
 			KeyEvent.KEYCODE_DPAD_CENTER -> listener.toggleUiVisibility()
 
+			// Fork (Ktv): TV remotes with a play/pause button drive auto-play, so a chapter can be
+			// read without touching the remote at all.
+			KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+			KeyEvent.KEYCODE_MEDIA_PLAY,
+			KeyEvent.KEYCODE_MEDIA_PAUSE -> listener.toggleAutoPlay()
+
 			KeyEvent.KEYCODE_SYSTEM_NAVIGATION_UP,
 			KeyEvent.KEYCODE_DPAD_UP -> switchBy(if (settings.isReaderNavigationInverted) 1 else -1, event, true)
 
@@ -135,6 +141,12 @@ class ReaderControlDelegate(
 		fun switchChapterBy(delta: Int)
 
 		fun scrollBy(delta: Int, smooth: Boolean): Boolean
+
+		/** Fork (Ktv): toggles auto-play (timer-driven page turns). */
+		fun toggleAutoPlay()
+
+		/** Fork (Ktv): called on every auto-play tick; the reader decides what to advance. */
+		fun onAutoPlayTick()
 
 		fun toggleUiVisibility()
 

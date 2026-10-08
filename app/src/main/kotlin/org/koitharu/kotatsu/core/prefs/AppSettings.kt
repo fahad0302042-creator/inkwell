@@ -518,6 +518,16 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		get() = prefs.getBoolean(KEY_READER_AUTOSCROLL_FAB, true)
 		set(value) = prefs.edit { putBoolean(KEY_READER_AUTOSCROLL_FAB, value) }
 
+	/* Fork (Ktv): auto-play, mainly for Android TV where page turns should not need the remote. */
+
+	val readerAutoPlayInterval: Int
+		get() = prefs.getInt(KEY_READER_AUTOPLAY_INTERVAL, READER_AUTOPLAY_INTERVAL_DEFAULT)
+			.coerceIn(READER_AUTOPLAY_INTERVAL_MIN, READER_AUTOPLAY_INTERVAL_MAX)
+
+	var isReaderAutoPlayContinueChapter: Boolean
+		get() = prefs.getBoolean(KEY_READER_AUTOPLAY_CONTINUE, true)
+		set(value) = prefs.edit { putBoolean(KEY_READER_AUTOPLAY_CONTINUE, value) }
+
 	val isPagesPreloadEnabled: Boolean
 		get() {
 			if (isBackgroundNetworkRestricted()) {
@@ -771,6 +781,12 @@ class AppSettings @Inject constructor(@ApplicationContext context: Context) {
 		const val KEY_SSL_BYPASS = "ssl_bypass"
 		const val KEY_READER_AUTOSCROLL_SPEED = "as_speed"
 		const val KEY_READER_AUTOSCROLL_FAB = "as_fab"
+		// Fork (Ktv): auto-play settings
+		const val KEY_READER_AUTOPLAY_INTERVAL = "reader_autoplay_interval"
+		const val KEY_READER_AUTOPLAY_CONTINUE = "reader_autoplay_continue"
+		const val READER_AUTOPLAY_INTERVAL_MIN = 1
+		const val READER_AUTOPLAY_INTERVAL_MAX = 30
+		const val READER_AUTOPLAY_INTERVAL_DEFAULT = 5
 		const val KEY_MIRROR_SWITCHING = "mirror_switching"
 		const val KEY_PROXY = "proxy"
 		const val KEY_PROXY_TYPE = "proxy_type_2"

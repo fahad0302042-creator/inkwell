@@ -904,4 +904,10 @@
     <string name="download_default_directory">Default directory for downloading manga</string>
     <string name="private_app_directory_warning">This directory with all data will be deleted if you uninstall the application</string>
     <string name="available_pattern">%1$s available</string>
+    <!-- Fork (Ktv): auto-play -->
+    <string name="auto_play_enabled">Auto-play: on</string>
+    <string name="auto_play_disabled">Auto-play: off</string>
+    <string name="reader_autoplay_continue">Continue to next chapter</string>
+    <string name="reader_autoplay_continue_summary">When auto-play reaches the end of a chapter, continue with the next one</string>
+    <string name="reader_autoplay_interval">Auto-play delay, seconds</string>
 </resources>
