@@ -25,6 +25,13 @@ android {
 		targetSdk = 36
 		versionCode = 1033
 		versionName = '9.4.1'
+		// Fork (Ktv): let CI stamp release versions without editing this file.
+		if (project.hasProperty('ktvVersionName')) {
+			versionName = project.property('ktvVersionName')
+		}
+		if (project.hasProperty('ktvVersionCode')) {
+			versionCode = project.property('ktvVersionCode').toInteger()
+		}
 		generatedDensities = []
 		testInstrumentationRunner 'org.koitharu.kotatsu.HiltTestRunner'
 		ksp {
@@ -41,6 +48,21 @@ android {
 		}
 		resValue 'string', 'tg_backup_bot_token', localProperties.getProperty('tg_backup_bot_token', '')
 	}
+	signingConfigs {
+		release {
+			// Fork (Ktv): release APKs are signed with a stable key supplied by CI env vars, so a new
+			// build installs over an older one (required for in-app self-update). Without the env
+			// vars the release build stays unsigned, matching upstream behaviour.
+			def ksPath = System.getenv('KEYSTORE_FILE')
+			if (ksPath != null && file(ksPath).exists()) {
+				storeFile file(ksPath)
+				storePassword System.getenv('KEYSTORE_PASSWORD')
+				keyAlias System.getenv('KEY_ALIAS')
+				keyPassword System.getenv('KEY_PASSWORD')
+				storeType 'PKCS12'
+			}
+		}
+	}
 	buildTypes {
 		debug {
 			applicationIdSuffix = '.debug'
@@ -49,6 +71,9 @@ android {
 			minifyEnabled true
 			shrinkResources true
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+			if (System.getenv('KEYSTORE_FILE') != null) {
+				signingConfig signingConfigs.release
+			}
 		}
 		nightly {
 			initWith release

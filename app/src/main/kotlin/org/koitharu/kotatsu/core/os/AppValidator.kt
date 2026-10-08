@@ -21,6 +21,9 @@ class AppValidator @Inject constructor(
 	}
 
 	private companion object {
-		private const val CERT_SHA256 = "67e15100bb809301783edcb6348fa3bbf83034d91e62868a91053dbd70db3f18"
+		// Fork (Ktv): upstream checks its own release certificate here to decide whether app updates
+		// are supported. Replaced with this fork's certificate so Ktv builds are treated as official
+		// Ktv builds — upstream APKs can no longer be installed over this app.
+		private const val CERT_SHA256 = "3da8e978290e410b8b208f5c42c7299aa417fd64e2f7fd49f8a8be35aff594f3"
 	}
 }

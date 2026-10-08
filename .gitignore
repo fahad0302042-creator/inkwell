@@ -28,3 +28,6 @@
 /.idea/deviceManager.xml
 /.kotlin/
 /.idea/AndroidProjectSystem.xml
+
+# Fork (Ktv): local handoff for signing material — never commit
+.secrets-handoff/

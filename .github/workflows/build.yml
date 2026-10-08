@@ -59,11 +59,20 @@ jobs:
       - name: Verify and list APKs
         if: ${{ hashFiles('app/build/outputs/apk/**/*.apk') != '' }}
         run: |
+          set -euo pipefail
           SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
           apksigner="$(find "$SDK/build-tools" -name apksigner | sort | tail -n 1)"
+          aapt2="$(find "$SDK/build-tools" -name aapt2 | sort | tail -n 1)"
           while IFS= read -r apk; do
             echo "::group::$apk"
             ls -lh "$apk"
+            pkg="$("$aapt2" dump packagename "$apk")"
+            echo "package: $pkg"
+            # Fork identity check: this must be the Ktv fork, not an upstream-named build.
+            case "$pkg" in
+              app.ktv.reader|app.ktv.reader.debug) echo "OK: Ktv fork identity" ;;
+              *) echo "::error::unexpected package name '$pkg'"; exit 1 ;;
+            esac
             "$apksigner" verify --print-certs "$apk" || true
             echo "::endgroup::"
           done < <(find app/build/outputs/apk -name '*.apk' | sort)

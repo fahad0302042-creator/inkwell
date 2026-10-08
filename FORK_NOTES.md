@@ -12,39 +12,82 @@
 | License | GPL-3.0 (unchanged — see [`LICENSE`](LICENSE)) |
 
 Imported as a single snapshot commit; upstream git history is not carried over. Copyright in the
-code remains with the Kotatsu contributors. This fork is **not affiliated with or endorsed by**
-the Kotatsu project — report fork bugs here, not upstream.
+code remains with the Kotatsu contributors. Not affiliated with or endorsed by the Kotatsu project.
 
 ## Changes from upstream v9.4.1
 
-Required by the rebrand:
+**Rebrand**
 
-- `app/src/main/res/values/strings.xml` — app label is now `Ktv`.
-- `app/build.gradle` — `applicationId` is `app.ktv.reader` (`.debug` suffix for debug builds), so
-  this app can be installed alongside official Kotatsu. `namespace` intentionally remains
-  `org.koitharu.kotatsu` because it maps to the Kotlin source tree.
-- `app/src/main/res/values/constants.xml` — sync provider authorities moved to the new id to avoid
-  colliding with official Kotatsu.
+- `res/values/strings.xml` — app label is `Ktv`.
+- `app/build.gradle` — `applicationId` is `app.ktv.reader` (`.debug` suffix for debug builds) so the
+  fork installs alongside official Kotatsu. `namespace` stays `org.koitharu.kotatsu` as it maps to
+  the Kotlin source tree.
 
-Build infrastructure:
+**Android TV / Google TV (stage 1 — launchable)**
 
-- `.github/workflows/build.yml` — **added**. Unit tests and APK assembly on every push/PR, with
-  `apksigner` verification and APK artifacts.
-- `.github/workflows/trigger-site-deploy.yml` — **removed**. Upstream-only; it dispatched to
+- `AndroidManifest.xml` — `android.software.leanback` and `android.hardware.touchscreen` declared
+  `required="false"`, a `LEANBACK_LAUNCHER` intent filter was added to `MainActivity`, and
+  `android:banner` points at the new `drawable-xhdpi/tv_banner.png` (320×180).
+- Result: Ktv appears on the Android TV / Google TV home screen. D-pad navigation and remote
+  control of the reader are **not done yet** — see "Not done" below.
+
+**Self-update**
+
+- `core/os/AppValidator.kt` — the trusted certificate is now this fork's release certificate, so
+  signed Ktv builds are treated as official by the update system (and upstream APKs can no longer
+  be installed over the app).
+- `res/values/constants.xml` — `github_updates_repo` points at this fork, and sync provider
+  authorities were moved off the upstream ids.
+- `app/build.gradle` — release builds are signed from `KEYSTORE_FILE` / `KEYSTORE_PASSWORD` /
+  `KEY_ALIAS` / `KEY_PASSWORD` env vars when present; otherwise the release stays unsigned.
+- Version stamping via `-PktvVersionName` / `-PktvVersionCode`.
+
+**Build infrastructure**
+
+- `.github/workflows/build.yml` — **added**: unit tests and APK assembly on every push/PR, with
+  apksigner verification plus a package-name assertion (this must be the Ktv fork, not upstream).
+- `.github/workflows/release.yml` — **added**: builds a signed release APK and publishes it as a
+  GitHub Release, which is what the in-app updater reads. Requires the four signing secrets.
+- `.github/workflows/trigger-site-deploy.yml` — **removed**: upstream-only, dispatched to
   `KotatsuApp/website` with a secret this fork does not have.
 
-## Known consequences of the rebrand (not yet handled)
+## Required one-time setup (not done by the agent)
 
-- **In-app updater**: `github_updates_repo` still points at `KotatsuApp/Kotatsu`, and update
-  checks on release builds are gated behind `AppValidator` requiring upstream's signing
-  certificate. Until both are addressed, self-update cannot work here.
-- **Signing**: CI currently produces debug-signed builds from a per-run debug keystore, so a new
-  build cannot install over an older one. A stable keystore is required for updates to work.
-- **No TV support yet**: no `leanback` launcher entry, no banner, and the UI is touch-oriented.
-  See the TV port stages in the project plan.
+Add these repository secrets under **Settings → Secrets and variables → Actions**:
+
+| Secret | Value |
+|---|---|
+| `KEYSTORE_BASE64` | base64 of the fork's `.p12` keystore |
+| `KEYSTORE_PASSWORD` | keystore password |
+| `KEY_ALIAS` | `ktv` |
+| `KEY_PASSWORD` | same as `KEYSTORE_PASSWORD` |
+
+Until they exist, `Release` fails on purpose with a message pointing here. The `Build` workflow
+needs no secrets.
+
+## Installing and updating
+
+1. Install the **release APK** from the repo's Releases page on the TV
+   (`adb install ktv.apk`, or a sideload launcher). Debug APKs cannot update a release install —
+   different signing key.
+2. Later releases install over it in place: Ktv checks
+   `github.com/fahad0302042-creator/inkwell/releases` and offers the update.
+3. **Release names must be plain numeric semver** (`v9.5.0`). `VersionId` treats a suffix such as
+   `-ktv1` as an unstable variant, and unstable releases are hidden unless the user enables
+   unstable updates — a suffixed release would never be offered.
+
+## Not done yet
+
+- **D-pad navigation / focus handling.** The UI is touch-oriented: ~20 files use
+  `ViewPager2`/`GestureDetector` and bottom navigation is a phone pattern.
+- **Reader on a remote.** No key mapping for page turns yet.
+- **Auto-play / auto-advance.** Upstream has auto-scroll (`readerAutoscrollSpeed`, `ScrollTimer`)
+  as a starting point; a paged auto-play option does not exist yet.
+- **App icon and animated TV banner.** Only the launcher banner was added; the icon is still
+  upstream's.
 
 ## Building
 
-CI builds with Android SDK 36 / build-tools 35.0.0, JDK 17 and the Gradle 9.0.0 wrapper.
-Locally: `./gradlew assembleDebug`. Dependencies come from Google Maven, Maven Central and
-JitPack; no binaries are vendored.
+CI uses Android SDK 36 / build-tools 35.0.0, JDK 17 and the Gradle 9.0.0 wrapper. Locally:
+`./gradlew assembleDebug`. Dependencies resolve from Google Maven, Maven Central and JitPack; no
+binaries are vendored.

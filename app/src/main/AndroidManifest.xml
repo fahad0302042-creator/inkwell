@@ -45,10 +45,19 @@
 		</intent>
 	</queries>
 
+	<!-- Fork (Ktv): installable and launchable on Android TV / Google TV while staying usable on phones. -->
+	<uses-feature
+		android:name="android.hardware.touchscreen"
+		android:required="false" />
+	<uses-feature
+		android:name="android.software.leanback"
+		android:required="false" />
+
 	<application
 		android:name="org.koitharu.kotatsu.KotatsuApp"
 		android:allowBackup="true"
 		android:backupAgent="org.koitharu.kotatsu.backups.domain.AppBackupAgent"
+		android:banner="@drawable/tv_banner"
 		android:dataExtractionRules="@xml/backup_rules"
 		android:enableOnBackInvokedCallback="@bool/is_predictive_back_enabled"
 		android:extractNativeLibs="true"
@@ -73,6 +82,11 @@
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+			<!-- Fork (Ktv): makes the app appear on the Android TV / Google TV home screen. -->
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LEANBACK_LAUNCHER" />
 			</intent-filter>
 			<meta-data
 				android:name="android.app.default_searchable"
