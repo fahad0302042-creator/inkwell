@@ -16,4 +16,6 @@
 	<item name="nav_updated" type="id" />
 	<item name="nav_suggestions" type="id" />
 	<item name="nav_bookmarks" type="id" />
+	<!-- Fork (Ktv): marks a view whose remote-focus ring is already applied. -->
+	<item name="ktv_focus_ring" type="id" />
 </resources>

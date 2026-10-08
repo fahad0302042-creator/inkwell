@@ -46,6 +46,7 @@ import org.koitharu.kotatsu.core.prefs.ReaderMode
 import org.koitharu.kotatsu.core.ui.BaseFullscreenActivity
 import org.koitharu.kotatsu.core.ui.dialog.buildAlertDialog
 import org.koitharu.kotatsu.core.ui.dialog.setCheckbox
+import org.koitharu.kotatsu.core.ui.containsView
 import org.koitharu.kotatsu.core.ui.enableRemoteFocusRecursively
 import org.koitharu.kotatsu.core.ui.util.MenuInvalidator
 import org.koitharu.kotatsu.core.ui.widgets.ZoomControl
@@ -339,7 +340,39 @@ class ReaderActivity :
 	}
 
 	override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+		// Fork (Ktv): Android only moves focus with the D-pad when the app does not consume the key.
+		// The reader control delegate consumes left/right (page turns) and up/down (scrolling), so
+		// without this branch focus can never travel into the toolbar or the bottom bar while they
+		// are on screen. Keys are still handled normally when the chrome is hidden or unfocused,
+		// which keeps page turning intact during normal reading.
+		if (isTelevision && viewBinding.appbarTop.isVisible && isNavigationKey(keyCode)) {
+			if (isFocusWithinReaderUi()) {
+				return super.onKeyDown(keyCode, event)
+			}
+			if (viewBinding.toolbarDocked.isVisible) {
+				// The chrome is up but focus is not in it (for example the pager took it back):
+				// move focus into the chrome instead of turning a page under the open menu.
+				enableReaderUiRemoteFocus()
+				return true
+			}
+		}
 		return controlDelegate.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
+	}
+
+	private fun isFocusWithinReaderUi(): Boolean {
+		val focus = currentFocus ?: return false
+		return viewBinding.toolbarDocked?.containsView(focus) == true || viewBinding.appbarTop.containsView(focus)
+	}
+
+	private fun isNavigationKey(keyCode: Int): Boolean = when (keyCode) {
+		KeyEvent.KEYCODE_DPAD_UP,
+		KeyEvent.KEYCODE_DPAD_DOWN,
+		KeyEvent.KEYCODE_DPAD_LEFT,
+		KeyEvent.KEYCODE_DPAD_RIGHT,
+		KeyEvent.KEYCODE_TAB,
+		-> true
+
+		else -> false
 	}
 
 	override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
@@ -581,6 +614,16 @@ class ReaderActivity :
 			}
 		}
 		target?.requestFocus()
+		// Toolbar menu items are populated during the first layout pass, which can happen after
+		// this call; re-run once so those items get the focus ring as well. Both walks are
+		// idempotent, so repeating them is harmless.
+		viewBinding.appbarTop.post { applyReaderUiRemoteFocusToChrome() }
+	}
+
+	private fun applyReaderUiRemoteFocusToChrome() {
+		for (container in listOfNotNull(viewBinding.toolbarDocked, viewBinding.appbarTop)) {
+			container.enableRemoteFocusRecursively()
+		}
 	}
 
 	private fun updateScrollTimerButton() {

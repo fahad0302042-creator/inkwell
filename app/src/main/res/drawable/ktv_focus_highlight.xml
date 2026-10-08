@@ -8,7 +8,7 @@
 		<shape android:shape="rectangle">
 			<corners android:radius="8dp" />
 			<stroke
-				android:width="3dp"
+				android:width="4dp"
 				android:color="@color/ktv_focus_stroke" />
 			<solid android:color="@color/ktv_focus_fill" />
 		</shape>

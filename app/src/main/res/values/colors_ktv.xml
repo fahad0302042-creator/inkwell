@@ -4,6 +4,6 @@
 <resources>
 
 	<color name="ktv_focus_stroke">#FFD54F</color>
-	<color name="ktv_focus_fill">#26FFD54F</color>
+	<color name="ktv_focus_fill">#3DFFD54F</color>
 
 </resources>
