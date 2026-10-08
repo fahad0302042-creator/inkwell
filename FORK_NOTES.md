@@ -40,8 +40,24 @@ code remains with the Kotatsu contributors. Not affiliated with or endorsed by t
   unfocusable so focus cannot get stuck on them.
 - `core/ui/widgets/SlidingBottomNavigationView.kt` — navigation items are focusable while the bar
   is visible and unfocusable while it is slid off-screen, so focus cannot land on a hidden control.
-- **Not yet verified on a real device.** Rely on the framework's default focus highlight
-  (API 26+); whether it is visible enough on every row background is unconfirmed.
+- `drawable/ktv_focus_highlight.xml` + `values/colors_ktv.xml` — an amber focus ring, drawn as a
+  **foreground** overlay so an item's own background (ripple / surface colour) keeps working.
+  Views that already define a foreground are left untouched.
+- **Not yet verified on a real device.** Focus ordering between regions, and how the ring reads on
+  every background, are unconfirmed.
+
+**Auto-play (TV)**
+
+- `reader/ui/AutoPlayTimer.kt` — new; ticks on the configured interval and mirrors `ScrollTimer`'s
+  assisted-injection design. It deliberately knows nothing about pages: it only ticks.
+- `reader/ui/ReaderActivity.kt` — decides what a tick means: next page; at the end of a chapter,
+  the next chapter if the setting is on; otherwise auto-play stops.
+- `reader/ui/ReaderControlDelegate.kt` — the remote's play/pause key (`KEYCODE_MEDIA_PLAY_PAUSE`,
+  `MEDIA_PLAY`, `MEDIA_PAUSE`) toggles auto-play, and a toast confirms it, since on a TV there is
+  otherwise no feedback that the press registered.
+- Settings: `reader_autoplay_interval` (1–30 s) and `reader_autoplay_continue` in reader settings.
+- Note: the reader **already** handled D-pad upstream — left/right turn pages, centre toggles the
+  UI, up/down switch chapters — so no key mapping was needed for those.
 
 **Self-update**
 
@@ -93,13 +109,12 @@ needs no secrets.
 - **D-pad navigation beyond lists.** Rows and the bottom bar are reachable, but dialogs, bottom
   sheets, the search bar and the floating action button have not been adapted, and focus ordering
   between regions is untested on a device.
-- **Reader on a remote.** No key mapping for page turns yet; the reader is driven by
-  `ViewPager2` swipes and taps.
-- **Auto-play / auto-advance.** Upstream has auto-scroll (`readerAutoscrollSpeed`, `ScrollTimer`)
-  as a starting point; a paged auto-play option does not exist yet. Agreed behaviour: advance pages
-  on a timer, with a setting for whether it continues into the next chapter.
+- **Reader controls for touch-shaped UI.** The reader responds to D-pad and auto-play, but its
+  on-screen controls (bottom action bar, sliders, timer control) have not been adapted for a
+  remote, and auto-play has no on-screen button — it is driven by the play/pause key.
 - **App icon and animated TV banner.** Only the launcher banner was added; the icon is still
   upstream's.
+- **Focus for bottom sheets and dialogs.** Reader config sheets and dialogs remain touch-shaped.
 
 ## Building
 
