@@ -22,6 +22,13 @@ code remains with the Kotatsu contributors. Not affiliated with or endorsed by t
 - `app/build.gradle` — `applicationId` is `app.ktv.reader` (`.debug` suffix for debug builds) so the
   fork installs alongside official Kotatsu. `namespace` stays `org.koitharu.kotatsu` as it maps to
   the Kotlin source tree.
+- All launcher artwork replaced: adaptive icon foreground (TV screen + play mark, amber on
+  transparent) in every density, legacy launcher and round icons for API < 26,
+  `launcher_background` is `#1C2029`, and the upstream `.webp` assets are gone.
+- `drawable/avd_splash.xml` — the upstream mascot path is replaced by a play mark drawn in the same
+  0..432 coordinate space, so the existing circular-reveal animation still works; the animation
+  target names no longer reference the upstream mascot.
+- Artwork is generated programmatically (Pillow) and is not derived from upstream's assets.
 
 **Android TV / Google TV (stage 1 — launchable)**
 
@@ -124,8 +131,9 @@ needs no secrets.
   action button have not been adapted.
 - **Auto-play has no on-screen button.** It is toggled by the remote's play/pause key, which the
   current TV remote has; an on-screen control would need the reader chrome to stay visible.
-- **App icon and animated TV banner.** Only the launcher banner was added; the icon is still
-  upstream's.
+- **App icon and TV banner** — replaced with fork artwork (see "Rebrand" above). The TV banner
+  itself cannot be animated: the Android TV home screen only accepts a static 320×180 image.
+  The launch splash *is* animated.
 - **Nothing has been verified on a real device yet.** Focus ordering between regions, how the focus
   ring reads on each background, and whether the chrome's default focus target feels right are all
   unconfirmed.
