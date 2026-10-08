@@ -59,6 +59,19 @@ code remains with the Kotatsu contributors. Not affiliated with or endorsed by t
 - Note: the reader **already** handled D-pad upstream — left/right turn pages, centre toggles the
   UI, up/down switch chapters — so no key mapping was needed for those.
 
+**Reader chrome on a remote**
+
+- `core/ui/RemoteFocus.kt` — `enableRemoteFocusRecursively()` walks a container, makes interactive
+  descendants remote-focusable and returns the first one.
+- `reader/ui/ReaderActivity.kt` — when the chrome becomes visible its controls are made focusable
+  and focus is handed to the first control, so the D-pad has a starting point; hiding the chrome
+  clears focus so page-turn keys are not swallowed.
+- `reader/ui/ReaderActivity.kt` — **TV-only** BACK handling: back closes the reader chrome before
+  leaving the reader. Without it, once focus is inside the bar there is no way out short of
+  clicking something. Gated on the `leanback` feature, so phone back behaviour is unchanged.
+- `res/layout/layout_reader_actions.xml` — the page slider is focusable, so it can be reached and
+  adjusted with the D-pad.
+
 **Self-update**
 
 - `core/os/AppValidator.kt` — the trusted certificate is now this fork's release certificate, so
@@ -106,15 +119,16 @@ needs no secrets.
 
 ## Not done yet
 
-- **D-pad navigation beyond lists.** Rows and the bottom bar are reachable, but dialogs, bottom
-  sheets, the search bar and the floating action button have not been adapted, and focus ordering
-  between regions is untested on a device.
-- **Reader controls for touch-shaped UI.** The reader responds to D-pad and auto-play, but its
-  on-screen controls (bottom action bar, sliders, timer control) have not been adapted for a
-  remote, and auto-play has no on-screen button — it is driven by the play/pause key.
+- **Dialogs and bottom sheets.** Lists, the bottom bar and the reader chrome are remote-reachable;
+  dialogs, bottom sheets (including the reader config sheet), the search bar and the floating
+  action button have not been adapted.
+- **Auto-play has no on-screen button.** It is toggled by the remote's play/pause key, which the
+  current TV remote has; an on-screen control would need the reader chrome to stay visible.
 - **App icon and animated TV banner.** Only the launcher banner was added; the icon is still
   upstream's.
-- **Focus for bottom sheets and dialogs.** Reader config sheets and dialogs remain touch-shaped.
+- **Nothing has been verified on a real device yet.** Focus ordering between regions, how the focus
+  ring reads on each background, and whether the chrome's default focus target feels right are all
+  unconfirmed.
 
 ## Building
 
