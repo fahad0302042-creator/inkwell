@@ -140,11 +140,30 @@ Add these repository secrets under **Settings → Secrets and variables → Acti
 Until they exist, `Release` fails on purpose with a message pointing here. The `Build` workflow
 needs no secrets.
 
+**Key rotation (2026-10-08).** The first release key generated for this fork was lost in a sandbox
+reset before it reached GitHub, so a second key was generated and staged. `AppValidator` trusts
+**both** certificates: the lost one is kept only so an install already signed with it can still
+self-update (nobody holds that private key any more, so trusting it costs nothing). If the earlier
+values were already added as secrets, replace them with the current ones from `.secrets-handoff/`.
+
 ## Installing and updating
 
-1. Install the **release APK** from the repo's Releases page on the TV
-   (`adb install ktv.apk`, or a sideload launcher). Debug APKs cannot update a release install —
-   different signing key.
+**Signing identities**
+
+| Channel | Application id | Signed with |
+|---|---|---|
+| Debug (what CI builds by default) | `app.ktv.reader.debug` | `keystore/ci-debug.keystore`, committed — see `keystore/README.md` |
+| Release (the `Release` workflow) | `app.ktv.reader` | the private key in the repository secrets |
+
+Debug builds were previously signed with whatever random key the CI runner generated, so each new
+APK was rejected when installing over the previous one ("App not installed"). Every debug build now
+uses the committed key, so they update in place. **Installs made before that change must be
+uninstalled once**, after which updates install normally. CI fails if the debug APK's signer does
+not match the expected fingerprint, so this cannot regress silently.
+
+1. Install the **release APK** from the repo's Releases page (`adb install ktv.apk`, or a sideload
+   launcher). A release APK can never install over a debug install — different key and a different
+   application id.
 2. Later releases install over it in place: Ktv checks
    `github.com/fahad0302042-creator/inkwell/releases` and offers the update.
 3. **Release names must be plain numeric semver** (`v9.5.0`). `VersionId` treats a suffix such as

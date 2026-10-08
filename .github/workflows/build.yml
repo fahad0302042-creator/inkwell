@@ -118,6 +118,57 @@ jobs:
             echo "::endgroup::"
           done < <(find app/build/outputs/apk -name '*.apk' | sort)
 
+      - name: Enforce stable debug signing
+        # Fork (Ktv): debug builds must all carry the same signature, otherwise a new APK cannot
+        # install over the previous one and the app appears to "fail to install" on the device.
+        if: ${{ hashFiles('app/build/outputs/apk/debug/**/*.apk') != '' }}
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          APKSIGNER="$(find "$SDK/build-tools" -name apksigner | sort | tail -n 1)"
+          APK="$(find app/build/outputs/apk/debug -name '*.apk' | sort | head -n 1)"
+          ACTUAL="$("$APKSIGNER" verify --print-certs "$APK" | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}' | tr 'A-Z' 'a-z')"
+          echo "debug APK signer certificate SHA-256: $ACTUAL"
+          EXPECTED="b4ecb823d5ddc27b0a3c00dec7c6f9576dcea37b9d50f54b74bf0f9f9a80eccc"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::the debug APK is not signed with the committed CI debug key (keystore/ci-debug.keystore)."
+            echo "::error::expected $EXPECTED but got $ACTUAL - a new build would not install over an existing one."
+            exit 1
+          fi
+          echo "::notice::debug builds are signed with the stable CI key, so they update in place"
+
+      - name: Report APK signer fingerprint
+        # Keeps a single updated comment on the PR with the signer fingerprint. Change it only
+        # together with keystore/ci-debug.keystore, and expect it to stay constant across runs.
+        if: ${{ github.event_name == 'pull_request' && hashFiles('app/build/outputs/apk/debug/**/*.apk') != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          APKSIGNER="$(find "$SDK/build-tools" -name apksigner | sort | tail -n 1)"
+          APK="$(find app/build/outputs/apk/debug -name '*.apk' | sort | head -n 1)"
+          FP="$("$APKSIGNER" verify --print-certs "$APK" | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}' | tr 'A-Z' 'a-z')"
+          MARKER='<!-- ktv-apk-signer -->'
+          {
+            echo "$MARKER"
+            echo "**Debug APK signer certificate SHA-256**"
+            echo
+            echo '```'
+            echo "$FP"
+            echo '```'
+            echo
+            echo "Constant across runs means debug APKs install over each other. If this value changes, existing installs must be uninstalled once."
+          } > "$RUNNER_TEMP/signer.md"
+          ID="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --jq "map(select(.body | startswith(\"$MARKER\")))[0].id // empty" 2>/dev/null || true)"
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$ID" -F body=@"$RUNNER_TEMP/signer.md" > /dev/null
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" -F body=@"$RUNNER_TEMP/signer.md" > /dev/null
+          fi
+          echo "reported signer fingerprint $FP"
+
       - name: Upload APKs
         if: ${{ hashFiles('app/build/outputs/apk/**/*.apk') != '' }}
         uses: actions/upload-artifact@v7
