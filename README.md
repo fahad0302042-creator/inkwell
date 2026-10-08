@@ -1,78 +1,134 @@
-# Inkwell 0.2 — experimental Keiyoushi host
+<div align="center">
 
-Android-first Flutter comic reader with a Kotlin source runtime.
+> ### ⚠️ Unofficial fork
+>
+> This repository is an **unofficial fork of [Kotatsu](https://github.com/KotatsuApp/Kotatsu)**,
+> imported from upstream tag **v9.4.1** (`06a0b58`).
+>
+> - **Not affiliated with or endorsed by the Kotatsu project.** Report bugs found in this fork
+>   *here*, not upstream.
+> - Licensed under **GPL-3.0**, same as upstream. See [`LICENSE`](LICENSE) and
+>   [`FORK_NOTES.md`](FORK_NOTES.md) for attribution and the list of local changes.
+> - Prebuilt APKs produced by CI are attached to this fork's workflow runs, not to Kotatsu's releases.
+> - The application id is still `org.koitharu.kotatsu` (`.debug` suffix for debug builds), so this
+>   build **conflicts with an installed official Kotatsu** — uninstall one before installing the other.
 
-**First real-APK milestone passed:** Keiyoushi **xkcd 1.4.17, English** loaded and served catalogue, details, chapters, cover and comic/text-image pages on an Android 15 emulator. **This is not a blanket claim of compatibility with every Keiyoushi extension.**
+</div>
 
-## Download and try
+<div align="center">
 
-- [Verified 0.2 APK build](https://github.com/fahad0302042-creator/inkwell/actions/runs/35476982042) → **Artifacts → Inkwell-test-APKs**.
-- Choose `app-arm64-v8a-debug.apk` for most current Android phones. ARM32 and x86-64 builds are also included. Minimum Android version: 7.0 / API 24.
-- [Keiyoushi installation and testing guide](docs/KEIYOUSHI_TESTING.md).
-- [Passing real-extension emulator tests](https://github.com/fahad0302042-creator/inkwell/actions/runs/35476981105).
+<a href="https://kotatsu.app">
+    <img src="./.github/assets/vtuber.png" alt="Kotatsu Logo" title="Kotatsu" width="600"/>
+</a>
 
-These are debug-signed builds. Updating from an older build may require uninstalling it due to changing debug keys; **uninstalling deletes its local data**. Stable release signing is not configured. GitHub artifacts expire after 14 days; workflows can generate new ones.
+# [Kotatsu](https://kotatsu.app)
 
-## Implemented
+**[Kotatsu](https://github.com/KotatsuApp/Kotatsu) is a free and open-source manga reader for Android with built-in online content sources.**
 
-- Original offline sample library, details, saved titles, filters, history and progress.
-- RTL, LTR and vertical reading modes, zoom and dark theme.
-- System-installed extension discovery and API 1.4 / 1.6 experimental host targets.
-- Explicit trust tied to package, signing certificates, version and exact APK hash; changed APKs require new approval.
-- Read-only APK snapshots, Source / SourceFactory loading and required host interfaces/models.
-- Context, preferences, JSON, cookies and network services.
-- Native popular/latest/search dispatch, details, chapters, page descriptors and image bytes using the source's own client.
-- Live-source browse/details/reader screens, pagination, errors/retries and saved chapter positions.
-- Certificate inspection, trust revocation and official extension-listing shortcut.
-- GitHub APK build and Android emulator testing workflows.
+![Downloads count](https://img.shields.io/github/downloads/KotatsuApp/Kotatsu/total?color=1976d2) ![Latest Stable version](https://img.shields.io/github/v/release/KotatsuApp/Kotatsu?color=2596be&label=latest) ![Android 6.0](https://img.shields.io/badge/android-6.0+-brightgreen) [![Sources count](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2FKotatsuApp%2Fkotatsu-parsers%2Frefs%2Fheads%2Fmaster%2F.github%2Fsummary.yaml&query=total&label=manga%20sources&color=%23E9321C)](https://github.com/KotatsuApp/kotatsu-parsers) [![weblate](https://hosted.weblate.org/widgets/kotatsu/-/strings/svg-badge.svg)](https://hosted.weblate.org/engage/kotatsu/) [![Discord](https://img.shields.io/discord/898363402467045416?color=5865f2&label=discord)](https://discord.gg/NNJ5RgVBC5) [![Telegram](https://img.shields.io/badge/chat-telegram-60ACFF?)](https://t.me/kotatsuapp) [![License](https://img.shields.io/github/license/KotatsuApp/Kotatsu)](https://github.com/KotatsuApp/Kotatsu/blob/devel/LICENSE)
 
-## Verified scope
+### Download
 
-- **15 Flutter tests** pass; static analysis is clean.
-- **1 native networking regression test** passes (preserves Host/encoding/cookie headers through the progress wrapper).
-- **2 Android emulator tests** pass, exercising a real installed xkcd APK and negative trust cases.
-- xkcd intentionally returns no text-search matches. Use **Popular** for this source; the host does not invent search results.
-- API 1.6, other extensions, other languages, interactive xkcd comics and physical phones remain unverified.
+<div align="left">
 
-See [docs/VALIDATION.md](docs/VALIDATION.md) for pinned versions, hashes and exact evidence.
+* **Recommended:** Download and install APK from [GitHub Releases](https://github.com/KotatsuApp/Kotatsu/releases/latest). Application has a built-in self-updating feature.
+* Get it on [F-Droid](https://f-droid.org/packages/org.koitharu.kotatsu). The F-Droid build may be a bit outdated and some fixes might be missing.
+* Also [nightly builds](https://github.com/KotatsuApp/Kotatsu-nightly/releases) are available (Unstable, use at your own risk). Application has a built-in self-updating feature.
 
-## Remaining
+</div>
 
-Remote-title library/database, source preference and custom-filter UI, JavaScript, verification-page interaction, download queue, extension repository/index management, in-app installation/updates, private extension import, background chapter updates and stable production signing.
+### Main Features
 
-The main Library tab still manages bundled samples. Live titles are accessed through Browse → Extensions. Source chapter positions are stored locally, but adding those titles to the main library is not implemented.
+<div align="left">
 
-## Security and distribution
+* Online [manga catalogues](https://github.com/KotatsuApp/kotatsu-parsers) (with 1200+ manga sources)
+* Search manga by name, genres and more filters
+* Favorites organized by user-defined categories
+* Reading history, bookmarks and incognito mode support
+* Download manga and read it offline. Third-party CBZ archives are also supported
+* Clean and convenient Material You UI, optimized for phones, tablets and desktop
+* Standard and Webtoon-optimized customizable reader, gesture support on reading interface
+* Notifications about new chapters with updates feed, manga recommendations (with filters)
+* Integration with manga tracking services: Shikimori, AniList, MyAnimeList, Kitsu
+* Password / fingerprint-protected access to the app
+* Automatically sync app data with other devices on the same account
+* Support for older devices running Android 6.0+
 
-Extension APKs run **in-process with the app's permissions, not in a sandbox**. Only trust publishers you are willing to grant access to app data and networking. Revoking trust blocks new host calls; restart Inkwell to fully unload code already started. There is no automatic trust or APK installation.
+</div>
 
-`QUERY_ALL_PACKAGES` enables arbitrary system-extension discovery and is restricted by Google Play policy; this prototype is for sideloading/development. Internet permission enables source requests. Package information stays on-device; there is no account/analytics service. Android backup is disabled.
+### In-App Screenshots
 
-No automatic challenge solving or access-control bypass is implemented. Images are capped at 16 MB and page lists at 2,000 pages in this preview. Expired native session handles require reopening a title from the source.
+<div align="center">
+    <img src="./metadata/en-US/images/phoneScreenshots/1.png" alt="Mobile view" width="250"/>
+    <img src="./metadata/en-US/images/phoneScreenshots/2.png" alt="Mobile view" width="250"/>
+    <img src="./metadata/en-US/images/phoneScreenshots/3.png" alt="Mobile view" width="250"/>
+    <img src="./metadata/en-US/images/phoneScreenshots/4.png" alt="Mobile view" width="250"/>
+    <img src="./metadata/en-US/images/phoneScreenshots/5.png" alt="Mobile view" width="250"/>
+    <img src="./metadata/en-US/images/phoneScreenshots/6.png" alt="Mobile view" width="250"/>
+</div>
 
-## Build
+<br>
 
-Flutter **3.47.5**, Dart **3.13.4**, Java **21** (JVM bytecode target 17). Android toolchain versions are chosen by Flutter.
+<div align="center">
+    <img src="./metadata/en-US/images/tenInchScreenshots/1.png" alt="Tablet view" width="400"/>
+    <img src="./metadata/en-US/images/tenInchScreenshots/2.png" alt="Tablet view" width="400"/>
+</div>
 
-```sh
-flutter pub get --enforce-lockfile
-flutter analyze
-flutter test
-flutter build apk --debug --split-per-abi
+### Localization
+
+<a href="https://hosted.weblate.org/engage/kotatsu/">
+<img src="https://hosted.weblate.org/widget/kotatsu/horizontal-auto.png" alt="Translation status" />
+</a>
+
+**[Kotatsu](https://github.com/KotatsuApp/Kotatsu) is localized in a number of different languages.**<br>
+**📌 If you would like to help improve these or add new languages,
+please head over to the [Weblate project page](https://hosted.weblate.org/engage/kotatsu/)**
+
+### Contributing
+
+<br>
+
+<a href="https://github.com/KotatsuApp/Kotatsu">
+  <picture>
+    <source srcset="https://github-readme-stats.vercel.app/api/pin/?username=KotatsuApp&repo=Kotatsu&bg_color=0d1117&text_color=1976d2&title_color=1976d2&icon_color=0877d2&border_radius=10&description_lines_count=2&show_owner=true" media="(prefers-color-scheme: dark)">
+    <img src="https://github-readme-stats.vercel.app/api/pin/?username=KotatsuApp&repo=Kotatsu&text_color=1976d2&title_color=1976d2&icon_color=0877d2&border_radius=10&description_lines_count=2&show_owner=true" alt="Kotatsu GitHub Repository">
+  </picture>
+</a>
+<a href="https://github.com/KotatsuApp/Kotatsu-parsers">
+  <picture>
+    <source srcset="https://github-readme-stats.vercel.app/api/pin/?username=KotatsuApp&repo=Kotatsu-parsers&bg_color=0d1117&text_color=1976d2&title_color=1976d2&icon_color=0877d2&border_radius=10&description_lines_count=2&show_owner=true" media="(prefers-color-scheme: dark)">
+    <img src="https://github-readme-stats.vercel.app/api/pin/?username=KotatsuApp&repo=Kotatsu-parsers&text_color=1976d2&title_color=1976d2&icon_color=0877d2&border_radius=10&description_lines_count=2&show_owner=true" alt="Kotatsu-parsers GitHub Repository">
+  </picture>
+</a><br></br>
+
+</br>
+
+**📌 Pull requests are welcome, if you want: See [CONTRIBUTING.md](https://github.com/KotatsuApp/Kotatsu/blob/devel/CONTRIBUTING.md) for the guidelines**
+
+### Certificate fingerprints
+
+```plaintext
+2C:19:C7:E8:07:61:2B:8E:94:51:1B:FD:72:67:07:64:5D:C2:58:AE
 ```
 
-Workflows:
-- `Build Android APK`: analysis, Flutter tests, APK compilation and artifacts.
-- `Keiyoushi runtime smoke test`: native networking regression and real installed-extension tests on Android 35. It downloads a pinned, hash-checked xkcd APK into the test runner only.
+```plaintext
+67:E1:51:00:BB:80:93:01:78:3E:DC:B6:34:8F:A3:BB:F8:30:34:D9:1E:62:86:8A:91:05:3D:BD:70:DB:3F:18
+```
 
-[Phone-only setup](docs/PHONE_SETUP.md) is available for creating another repository without a PC. No personal token is required by either workflow. Never commit a token, signing password or keystore.
+### License
 
-## Architecture and licences
+[![GNU GPLv3 Image](https://www.gnu.org/graphics/gplv3-127x51.png)](http://www.gnu.org/licenses/gpl-3.0.en.html)
 
-- `lib/core/`: sample state and persistence.
-- `lib/features/source_screens.dart`: live browse/details/reader screens.
-- `lib/platform/extensions.dart`: typed Dart method-channel contract.
-- `android/.../runtime/`: APK inspection, trust, class loading, native object handles and source operations.
-- `android/.../eu/kanade/tachiyomi/`: host API, models and network compatibility.
+<div align="left">
 
-Mihon API sources are pinned and adapted under Apache-2.0; [third-party notices](THIRD_PARTY_NOTICES.md) and licence text are retained. Lora and DM Sans fonts use SIL OFL 1.1; licences are bundled and shown in-app. Other dependencies retain their licences. Original sample PNGs are generated by `tools/draw_samples.py`; no third-party manga scans or extension APKs are bundled in Inkwell.
+You may copy, distribute and modify the software as long as you track changes/dates in source files. Any modifications to or software including (via compiler) GPL-licensed code must also be made available under the GPL along with build & install instructions.
+
+</div>
+
+### DMCA disclaimer
+
+<div align="left">
+
+The developers of this application do not have any affiliation with the content available in the app and does not store or distribute any content. This application should be considered a web browser, all content that can be found using this application is freely available on the Internet. All DMCA takedown requests should be sent to the owners of the website where the content is hosted.
+
+</div>
