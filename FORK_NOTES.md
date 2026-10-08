@@ -28,8 +28,20 @@ code remains with the Kotatsu contributors. Not affiliated with or endorsed by t
 - `AndroidManifest.xml` — `android.software.leanback` and `android.hardware.touchscreen` declared
   `required="false"`, a `LEANBACK_LAUNCHER` intent filter was added to `MainActivity`, and
   `android:banner` points at the new `drawable-xhdpi/tv_banner.png` (320×180).
-- Result: Ktv appears on the Android TV / Google TV home screen. D-pad navigation and remote
-  control of the reader are **not done yet** — see "Not done" below.
+- Result: Ktv appears on the Android TV / Google TV home screen.
+
+**Android TV / Google TV (stage 2 — partly drivable by remote)**
+
+- `core/ui/RemoteFocus.kt` — new; documents and implements the fork's rule that anything clickable
+  must also be focusable, so a remote can select it.
+- `core/ui/BaseListAdapter.kt` — overrides `onViewAttachedToWindow` to give clickable rows remote
+  focus. Every list screen (browse, explore, chapter list, bookmarks, feed) runs through this
+  adapter, so one change covers them all. Non-interactive rows (headers, footers, states) stay
+  unfocusable so focus cannot get stuck on them.
+- `core/ui/widgets/SlidingBottomNavigationView.kt` — navigation items are focusable while the bar
+  is visible and unfocusable while it is slid off-screen, so focus cannot land on a hidden control.
+- **Not yet verified on a real device.** Rely on the framework's default focus highlight
+  (API 26+); whether it is visible enough on every row background is unconfirmed.
 
 **Self-update**
 
@@ -78,11 +90,14 @@ needs no secrets.
 
 ## Not done yet
 
-- **D-pad navigation / focus handling.** The UI is touch-oriented: ~20 files use
-  `ViewPager2`/`GestureDetector` and bottom navigation is a phone pattern.
-- **Reader on a remote.** No key mapping for page turns yet.
+- **D-pad navigation beyond lists.** Rows and the bottom bar are reachable, but dialogs, bottom
+  sheets, the search bar and the floating action button have not been adapted, and focus ordering
+  between regions is untested on a device.
+- **Reader on a remote.** No key mapping for page turns yet; the reader is driven by
+  `ViewPager2` swipes and taps.
 - **Auto-play / auto-advance.** Upstream has auto-scroll (`readerAutoscrollSpeed`, `ScrollTimer`)
-  as a starting point; a paged auto-play option does not exist yet.
+  as a starting point; a paged auto-play option does not exist yet. Agreed behaviour: advance pages
+  on a timer, with a setting for whether it continues into the next chapter.
 - **App icon and animated TV banner.** Only the launcher banner was added; the icon is still
   upstream's.
 
