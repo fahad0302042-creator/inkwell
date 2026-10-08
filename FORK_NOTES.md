@@ -95,6 +95,16 @@ code remains with the Kotatsu contributors. Not affiliated with or endorsed by t
   clicking something. Gated on the `leanback` feature, so phone back behaviour is unchanged.
 - `res/layout/layout_reader_actions.xml` — the page slider is focusable, so it can be reached and
   adjusted with the D-pad.
+- `reader/ui/ReaderActivity.kt` — **D-pad keys are passed through to the framework** while the
+  chrome is visible and focused. This is required, not optional: Android only moves focus with the
+  D-pad when the app does not consume the key, and the reader controls consume every D-pad key
+  (left/right turn pages, up/down scroll). Without the pass-through, focus can never reach the
+  chrome. Page turns with the chrome hidden are unaffected, and media keys still reach auto-play.
+- `core/ui/RemoteFocus.kt` — the focus ring is layered **on top of** an existing foreground rather
+  than skipped when one is present. Controls that style their own foreground kept the default
+  (very subtle) focus highlight otherwise, which made focus hard to see exactly on the busiest
+  screens. The ring is 4dp, applied idempotently via the `ktv_focus_ring` view tag, and re-applied
+  after the layout pass so toolbar menu items populated later are covered too.
 
 **Self-update**
 
