@@ -92,6 +92,10 @@ class ReaderActivity :
 	@Inject
 	lateinit var scrollTimerFactory: ScrollTimer.Factory
 
+	// Fork (Ktv): auto-play timer (TV)
+	@Inject
+	lateinit var autoPlayTimerFactory: AutoPlayTimer.Factory
+
 	@Inject
 	lateinit var screenOrientationHelper: ScreenOrientationHelper
 
