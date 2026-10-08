@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.core.ui
 
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer.ListListener
+import androidx.recyclerview.widget.RecyclerView
 import com.hannesdorfmann.adapterdelegates4.AdapterDelegate
 import com.hannesdorfmann.adapterdelegates4.AsyncListDifferDelegationAdapter
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,14 @@ open class BaseListAdapter<T : ListModel> : AsyncListDifferDelegationAdapter<T>(
 
 	override suspend fun emit(value: List<T>?) = suspendCoroutine { cont ->
 		setItems(value.orEmpty(), ContinuationResumeRunnable(cont))
+	}
+
+	override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
+		super.onViewAttachedToWindow(holder)
+		// Fork (Ktv): Android TV / D-pad support. Every list screen (browse, explore, chapters,
+		// bookmarks, feed) runs through this adapter, so enabling remote focus here makes rows
+		// selectable with a remote instead of requiring touch.
+		holder.itemView.enableRemoteFocus()
 	}
 
 	fun addDelegate(type: ListItemType, delegate: AdapterDelegate<List<T>>): BaseListAdapter<T> {

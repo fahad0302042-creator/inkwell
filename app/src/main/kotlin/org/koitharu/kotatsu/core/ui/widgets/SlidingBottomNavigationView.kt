@@ -9,6 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.ViewGroup
 import android.view.ViewPropertyAnimator
 import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
@@ -59,6 +60,22 @@ class SlidingBottomNavigationView @JvmOverloads constructor(
 
 	override fun getBehavior(): CoordinatorLayout.Behavior<*> {
 		return behavior
+	}
+
+	// Fork (Ktv): Android TV / D-pad support. The navigation items are the main way to move
+	// between sections with a remote, so they must be focusable. They are switched off while the
+	// bar is slid off-screen, otherwise focus would land on an invisible item.
+	override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+		super.onLayout(changed, left, top, right, bottom)
+		updateItemsFocusability()
+	}
+
+	private fun updateItemsFocusability() {
+		val menuView = getChildAt(0) as? ViewGroup ?: return
+		val focusable = currentState == STATE_UP
+		for (i in 0 until menuView.childCount) {
+			menuView.getChildAt(i).isFocusable = focusable
+		}
 	}
 
 	/** From BottomNavigationView **/
@@ -139,6 +156,7 @@ class SlidingBottomNavigationView @JvmOverloads constructor(
 		clearAnimation()
 
 		currentState = STATE_UP
+		updateItemsFocusability()
 		animateTranslation(
 			0F,
 			SLIDE_UP_ANIMATION_DURATION,
@@ -154,6 +172,7 @@ class SlidingBottomNavigationView @JvmOverloads constructor(
 		clearAnimation()
 
 		currentState = STATE_DOWN
+		updateItemsFocusability()
 		val target = measureHeight()
 		if (target == 0) {
 			return

@@ -23,6 +23,9 @@ concurrency:
 
 permissions:
   contents: read
+  # Fork (Ktv): a failed build reports its compile errors as a PR comment. CI logs are served from
+  # blob storage, so this is the reviewable place to see what broke.
+  pull-requests: write
 
 jobs:
   build:
@@ -51,10 +54,36 @@ jobs:
 
       - name: Run Gradle
         run: |
+          set -o pipefail
           ./gradlew ${TASK} --no-daemon --stacktrace \
-            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g"
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g" 2>&1 | tee "$RUNNER_TEMP/gradle.log"
         env:
           TASK: ${{ github.event.inputs.task || 'assembleDebug' }}
+
+      - name: Report build failure on the pull request
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          LOG="$RUNNER_TEMP/gradle.log"
+          {
+            echo "### ❌ Gradle failed"
+            echo ""
+            echo '```'
+            if [ -f "$LOG" ]; then
+              ERRORS="$(grep -E '^e: |error:|FAILURE:|What went wrong|Execution failed|Caused by|FAILED' "$LOG" | head -60 || true)"
+              if [ -n "$ERRORS" ]; then
+                printf '%s\n' "$ERRORS"
+              else
+                tail -40 "$LOG"
+              fi
+            else
+              echo "no gradle log captured"
+            fi
+            echo '```'
+          } > "$RUNNER_TEMP/report.md"
+          gh pr comment "$PR_NUMBER" --body-file "$RUNNER_TEMP/report.md" || echo "could not comment on the PR"
 
       - name: Verify and list APKs
         if: ${{ hashFiles('app/build/outputs/apk/**/*.apk') != '' }}
