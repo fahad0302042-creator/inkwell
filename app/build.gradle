@@ -18,7 +18,9 @@ android {
 	namespace = 'org.koitharu.kotatsu'
 
 	defaultConfig {
-		applicationId 'org.koitharu.kotatsu'
+		// Fork (Ktv): separate install identity so this build can coexist with official Kotatsu.
+		// `namespace` above intentionally stays org.koitharu.kotatsu — it maps to the Kotlin source tree.
+		applicationId 'app.ktv.reader'
 		minSdk = 23
 		targetSdk = 36
 		versionCode = 1033

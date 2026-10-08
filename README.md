@@ -1,22 +1,5 @@
 <div align="center">
 
-> ### ⚠️ Unofficial fork
->
-> This repository is an **unofficial fork of [Kotatsu](https://github.com/KotatsuApp/Kotatsu)**,
-> imported from upstream tag **v9.4.1** (`06a0b58`).
->
-> - **Not affiliated with or endorsed by the Kotatsu project.** Report bugs found in this fork
->   *here*, not upstream.
-> - Licensed under **GPL-3.0**, same as upstream. See [`LICENSE`](LICENSE) and
->   [`FORK_NOTES.md`](FORK_NOTES.md) for attribution and the list of local changes.
-> - Prebuilt APKs produced by CI are attached to this fork's workflow runs, not to Kotatsu's releases.
-> - The application id is still `org.koitharu.kotatsu` (`.debug` suffix for debug builds), so this
->   build **conflicts with an installed official Kotatsu** — uninstall one before installing the other.
-
-</div>
-
-<div align="center">
-
 <a href="https://kotatsu.app">
     <img src="./.github/assets/vtuber.png" alt="Kotatsu Logo" title="Kotatsu" width="600"/>
 </a>
