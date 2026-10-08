@@ -9,7 +9,9 @@ Writes:
   app/src/main/res/mipmap-*/ic_launcher.png, ic_launcher_round.png, ic_launcher_foreground.png
   app/src/nightly/res/mipmap-*/   (same three files)
   app/src/main/res/drawable-xhdpi/tv_banner.png        320x180 Android TV home screen banner
-  app/src/main/res/drawable-xhdpi/ktv_splash_mark.png  Android 12+ splash icon
+
+The Android 12+ splash icon is not generated here: it points at @mipmap/ic_launcher, so it reuses
+the adaptive icon above.
 
 Requires: Pillow, numpy, scipy.
 
@@ -18,8 +20,6 @@ Notes for whoever edits this next:
     system's mask clips it. That is the FOREGROUND_SCALE factor below.
   * Legacy icons for API < 26 are not masked by the system, so the background is baked in there.
     The gradient therefore exists twice: here and in drawable/ktv_icon_background.xml. Change both.
-  * The splash icon is masked by the system to the middle 2/3 circle: keep the badge at or below
-    SPLASH_BADGE_SCALE of the canvas.
 """
 
 from PIL import Image, ImageDraw, ImageFont
@@ -46,7 +46,6 @@ FOREGROUND_SCALE = 0.60  # of the 108-unit adaptive canvas, inside the 66-unit s
 LEGACY_SCALE = 0.74
 BADGE_SCALE = 0.22  # corner radius of the legacy rounded-square, as a fraction of its size
 TV_BANNER_SCALE = 0.78
-SPLASH_BADGE_SCALE = 0.615
 
 FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_REGULAR = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
@@ -98,18 +97,6 @@ def masked_background(size, radius_ratio, circle=False, supersample=4):
     return out
 
 
-def circular_badge(size, inner_scale):
-    """Solid circular navy badge with the mascot inside it — readable on any background."""
-    badge = round(size * inner_scale)
-    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    mask = Image.new("L", (badge * 4, badge * 4), 0)
-    ImageDraw.Draw(mask).ellipse([0, 0, badge * 4 - 1, badge * 4 - 1], fill=255)
-    mask = mask.resize((badge, badge), Image.LANCZOS)
-    offset = (size - badge) // 2
-    canvas.paste(gradient((badge, badge), NAVY, NAVY_DARK).convert("RGBA"), (offset, offset), mask)
-    return canvas, badge, offset
-
-
 def main():
     mascot = Image.open(os.path.join(ROOT, "art", "mascot.png")).convert("RGBA")
 
@@ -151,15 +138,6 @@ def main():
     draw.text((text_x + 4, height * 0.63), "MANGA FOR TV", font=small, fill=AMBER)
     banner.convert("RGB").save(os.path.join(RES, "drawable-xhdpi", "tv_banner.png"))
     print("  tv_banner.png: 320x180")
-
-    # Android 12+ splash icon. The background colour is dynamic (follows the wallpaper), so the
-    # mascot sits on its own badge instead of relying on a particular backdrop.
-    canvas_size = 432
-    splash, badge, offset = circular_badge(canvas_size, SPLASH_BADGE_SCALE)
-    inner = fit(mascot, round(badge * 0.80))
-    splash.alpha_composite(inner, ((canvas_size - inner.width) // 2, (canvas_size - inner.height) // 2))
-    splash.save(os.path.join(RES, "drawable-xhdpi", "ktv_splash_mark.png"))
-    print(f"  ktv_splash_mark.png: {canvas_size}x{canvas_size}")
 
 
 if __name__ == "__main__":

@@ -39,10 +39,12 @@ code remains with the Kotatsu contributors. Not affiliated with or endorsed by t
 - `art/mascot.png` + `art/make_branding.py` — source art plus a generator script. Running
   `python3 art/make_branding.py` reproduces every asset byte-for-byte, so the branding stays
   maintainable instead of being a pile of opaque binaries.
-- Splash: the vector drawable is gone, replaced by `drawable-xhdpi/ktv_splash_mark.png` — a circular
-  badge, chosen because the splash background is a **dynamic Material You colour** the user's
-  wallpaper controls. Being a raster, the Android 12+ splash icon is now static; the vector it
-  replaced animated.
+- Splash: `windowSplashScreenAnimatedIcon` points at `@mipmap/ic_launcher`, the platform-recommended
+  approach, so the splash reuses the adaptive icon instead of shipping a second asset. The splash
+  background is a **dynamic Material You colour**, so the splash appearance follows the wallpaper —
+  this is upstream's behaviour and was kept.
+  (An earlier attempt shipped a PNG in `drawable-xhdpi`, which lint rejects for a release build
+  because the resource has no default-density variant; it also made the splash icon static.)
 - Artwork is generated from fork-owned source art and is not derived from upstream's assets.
 
 **Android TV / Google TV (stage 1 — launchable)**
