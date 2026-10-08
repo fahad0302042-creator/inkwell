@@ -19,6 +19,16 @@ code remains with the Kotatsu contributors. Not affiliated with or endorsed by t
 **Rebrand**
 
 - `res/values/strings.xml` — app label is `Ktv`.
+- Flavour source sets override the label too, and were missed on the first pass: debug was
+  `Kotatsu Dev` (now `Ktv Dev`), nightly was `Kotatsu Nightly` (now `Ktv Nightly`).
+- `nightly/res/values/constants.xml` — `github_updates_repo` pointed at
+  `KotatsuApp/Kotatsu-Nightly`; now points at this fork, like the main source set. Nightly builds
+  are signed with the fork's key, so upstream's nightly APKs could never have been installed.
+- Nightly had its own copy of upstream's launcher icons; replaced with the fork artwork.
+- 195 occurrences of the app name in user-visible strings were renamed to `Ktv` across the default
+  and 34 translated `strings.xml` files. Two deliberate exceptions: the `kotatsu://about` deep
+  link (31 URIs, lowercase, left intact) and **"Kotatsu Backup Bot"**, which is genuinely upstream's
+  Telegram bot and would be a false claim if renamed.
 - `app/build.gradle` — `applicationId` is `app.ktv.reader` (`.debug` suffix for debug builds) so the
   fork installs alongside official Kotatsu. `namespace` stays `org.koitharu.kotatsu` as it maps to
   the Kotlin source tree.
