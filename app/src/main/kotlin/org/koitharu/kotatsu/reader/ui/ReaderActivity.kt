@@ -349,7 +349,7 @@ class ReaderActivity :
 			if (isFocusWithinReaderUi()) {
 				return super.onKeyDown(keyCode, event)
 			}
-			if (viewBinding.toolbarDocked.isVisible) {
+			if (viewBinding.toolbarDocked?.isVisible == true) {
 				// The chrome is up but focus is not in it (for example the pager took it back):
 				// move focus into the chrome instead of turning a page under the open menu.
 				enableReaderUiRemoteFocus()
