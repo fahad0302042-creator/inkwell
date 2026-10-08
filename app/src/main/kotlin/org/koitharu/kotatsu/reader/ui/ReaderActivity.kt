@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.reader.ui
 import android.app.assist.AssistContent
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.Gravity
 import android.view.KeyEvent
@@ -10,6 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.graphics.Insets
@@ -44,6 +46,7 @@ import org.koitharu.kotatsu.core.prefs.ReaderMode
 import org.koitharu.kotatsu.core.ui.BaseFullscreenActivity
 import org.koitharu.kotatsu.core.ui.dialog.buildAlertDialog
 import org.koitharu.kotatsu.core.ui.dialog.setCheckbox
+import org.koitharu.kotatsu.core.ui.enableRemoteFocusRecursively
 import org.koitharu.kotatsu.core.ui.util.MenuInvalidator
 import org.koitharu.kotatsu.core.ui.widgets.ZoomControl
 import org.koitharu.kotatsu.core.util.IdlingDetector
@@ -116,9 +119,23 @@ class ReaderActivity :
 	private lateinit var readerManager: ReaderManager
 	private val hideUiRunnable = Runnable { setUiIsVisible(false) }
 
+	// Fork (Ktv): TV-only behaviour. On a TV the reader chrome is opened with the D-pad, which
+	// means BACK must close the chrome instead of leaving the reader.
+	private val isTelevision by lazy(LazyThreadSafetyMode.NONE) {
+		packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+	}
+
+	private val hideReaderUiOnBackCallback = object : OnBackPressedCallback(false) {
+		override fun handleOnBackPressed() {
+			setUiIsVisible(false)
+			currentFocus?.clearFocus()
+		}
+	}
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(ActivityReaderBinding.inflate(layoutInflater))
+		onBackPressedDispatcher.addCallback(this, hideReaderUiOnBackCallback)
 		readerManager = ReaderManager(supportFragmentManager, viewBinding.container, settings)
 		setDisplayHomeAsUp(isEnabled = true, showUpAsClose = false)
 		touchHelper = TapGridDispatcher(viewBinding.root, this)
@@ -386,6 +403,12 @@ class ReaderActivity :
 			viewBinding.infoBar.isTimeVisible = isFullscreen
 			updateScrollTimerButton()
 			systemUiController.setSystemUiVisible(isUiVisible || !isFullscreen)
+			hideReaderUiOnBackCallback.isEnabled = isTelevision && isUiVisible
+			if (isUiVisible) {
+				enableReaderUiRemoteFocus()
+			} else {
+				currentFocus?.clearFocus()
+			}
 			viewBinding.root.requestApplyInsets()
 		}
 	}
@@ -546,6 +569,18 @@ class ReaderActivity :
 		viewBinding.actionsView.isSliderEnabled = uiState.isSliderAvailable()
 		viewBinding.actionsView.isNextEnabled = uiState.hasNextChapter()
 		viewBinding.actionsView.isPrevEnabled = uiState.hasPreviousChapter()
+	}
+
+	// Fork (Ktv): make the reader chrome reachable with a remote and give focus a starting point.
+	private fun enableReaderUiRemoteFocus() {
+		var target: View? = null
+		for (container in listOfNotNull(viewBinding.toolbarDocked, viewBinding.appbarTop)) {
+			val first = container.enableRemoteFocusRecursively()
+			if (target == null) {
+				target = first
+			}
+		}
+		target?.requestFocus()
 	}
 
 	private fun updateScrollTimerButton() {

@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.core.ui
 
 import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import org.koitharu.kotatsu.R
 
@@ -24,4 +25,24 @@ internal fun View.enableRemoteFocus() {
 	if (foreground == null) {
 		foreground = AppCompatResources.getDrawable(context, R.drawable.ktv_focus_highlight)
 	}
+}
+
+/**
+ * Fork (Ktv): walks a container, makes every interactive descendant remote-focusable and returns
+ * the first focusable view found, so the caller can hand focus to it.
+ */
+internal fun View.enableRemoteFocusRecursively(): View? {
+	if (isClickable) {
+		enableRemoteFocus()
+	}
+	var first: View? = if (isFocusable) this else null
+	if (this is ViewGroup) {
+		for (i in 0 until childCount) {
+			val nested = getChildAt(i).enableRemoteFocusRecursively()
+			if (first == null && nested != null) {
+				first = nested
+			}
+		}
+	}
+	return first
 }
