@@ -32,13 +32,18 @@ code remains with the Kotatsu contributors. Not affiliated with or endorsed by t
 - `app/build.gradle` — `applicationId` is `app.ktv.reader` (`.debug` suffix for debug builds) so the
   fork installs alongside official Kotatsu. `namespace` stays `org.koitharu.kotatsu` as it maps to
   the Kotlin source tree.
-- All launcher artwork replaced: adaptive icon foreground (TV screen + play mark, amber on
-  transparent) in every density, legacy launcher and round icons for API < 26,
-  `launcher_background` is `#1C2029`, and the upstream `.webp` assets are gone.
-- `drawable/avd_splash.xml` — the upstream mascot path is replaced by a play mark drawn in the same
-  0..432 coordinate space, so the existing circular-reveal animation still works; the animation
-  target names no longer reference the upstream mascot.
-- Artwork is generated programmatically (Pillow) and is not derived from upstream's assets.
+- All launcher artwork replaced with a **cat mascot reading a manga**: adaptive icon foreground in
+  every density (mascot on transparency, inside the 66/108 safe zone), legacy launcher and round
+  icons for API < 26 with the navy gradient baked in, and `drawable/ktv_icon_background.xml` as the
+  adaptive icon's background layer. The upstream `.webp` assets are gone.
+- `art/mascot.png` + `art/make_branding.py` — source art plus a generator script. Running
+  `python3 art/make_branding.py` reproduces every asset byte-for-byte, so the branding stays
+  maintainable instead of being a pile of opaque binaries.
+- Splash: the vector drawable is gone, replaced by `drawable-xhdpi/ktv_splash_mark.png` — a circular
+  badge, chosen because the splash background is a **dynamic Material You colour** the user's
+  wallpaper controls. Being a raster, the Android 12+ splash icon is now static; the vector it
+  replaced animated.
+- Artwork is generated from fork-owned source art and is not derived from upstream's assets.
 
 **Android TV / Google TV (stage 1 — launchable)**
 
