@@ -189,9 +189,13 @@ not match the expected fingerprint, so this cannot regress silently.
 - **App icon and TV banner** — replaced with fork artwork (see "Rebrand" above). The TV banner
   itself cannot be animated: the Android TV home screen only accepts a static 320×180 image.
   The launch splash *is* animated.
-- **Nothing has been verified on a real device yet.** Focus ordering between regions, how the focus
-  ring reads on each background, and whether the chrome's default focus target feels right are all
-  unconfirmed.
+- **Device testing is the user's, not the agent's.** The fork has been run on real Android TV
+  hardware and the TV work was driven by what that testing found. Nothing has been verified by an
+  emulator or an automated test, so focus ordering between regions, how the focus ring reads on
+  each background and whether the chrome's default focus target feels right rest on that alone.
+- **The D-pad mouse pointer has not been run.** It compiles and the key handling is reasoned out,
+  but no build containing it has been on a device. The open question is whether synthetic touches
+  satisfy the Cloudflare challenge, which sometimes inspects the event source.
 
 ## Building
 
