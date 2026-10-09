@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fork (Ktv): strong focus indicator for Android TV / D-pad navigation.
+     Used as a foreground overlay so an item's own background (ripple, surface colour) keeps
+     working while the focus ring stays unmistakable from across a room. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<item android:state_focused="true">
+		<shape android:shape="rectangle">
+			<corners android:radius="8dp" />
+			<stroke
+				android:width="4dp"
+				android:color="@color/ktv_focus_stroke" />
+			<solid android:color="@color/ktv_focus_fill" />
+		</shape>
+	</item>
+
+	<item>
+		<shape android:shape="rectangle">
+			<corners android:radius="8dp" />
+			<solid android:color="@android:color/transparent" />
+		</shape>
+	</item>
+
+</selector>

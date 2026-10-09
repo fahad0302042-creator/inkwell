@@ -1,0 +1,275 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: Gradle task to run
+        required: true
+        default: assembleDebug
+        type: choice
+        options:
+          - assembleDebug
+          - assembleRelease
+          - testDebugUnitTest
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  # Fork (Ktv): a failed build reports its compile errors as a PR comment. CI logs are served from
+  # blob storage, so this is the reviewable place to see what broke.
+  pull-requests: write
+
+jobs:
+  build:
+    name: ${{ github.event.inputs.task || 'Assemble debug APK' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Install Android SDK components
+        run: |
+          # The ubuntu runner image ships the Android SDK (ANDROID_HOME/ANDROID_SDK_ROOT).
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          echo "Android SDK at $SDK"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" \
+            --install "platforms;android-36" "build-tools;35.0.0" "platform-tools"
+
+      - name: Run Gradle
+        run: |
+          set -o pipefail
+          ./gradlew ${TASK} --no-daemon --stacktrace \
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g" 2>&1 | tee "$RUNNER_TEMP/gradle.log"
+        env:
+          TASK: ${{ github.event.inputs.task || 'assembleDebug' }}
+
+      - name: Report build failure on the pull request
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          LOG="$RUNNER_TEMP/gradle.log"
+          {
+            echo "### ❌ Gradle failed"
+            echo ""
+            echo '```'
+            if [ -f "$LOG" ]; then
+              ERRORS="$(grep -Ei '^e: |error:|failure:|what went wrong|execution failed|caused by|failed|\[[A-Za-z]+\]$' "$LOG" | head -60 || true)"
+              if [ -n "$ERRORS" ]; then
+                printf '%s\n' "$ERRORS"
+              else
+                tail -40 "$LOG"
+              fi
+            else
+              echo "no gradle log captured"
+            fi
+            echo '```'
+            echo ""
+            echo "#### lint reports"
+            for f in $(find app/build -name 'lint-results*' -type f 2>/dev/null | head -5); do
+              echo "--- $f"
+              echo '```'
+              if file "$f" | grep -q text; then
+                head -60 "$f"
+              else
+                grep -oE 'id="[^"]*"|message="[^"]*"|file="[^"]*"' "$f" | head -40
+              fi
+              echo '```'
+            done
+          } > "$RUNNER_TEMP/report.md"
+          gh pr comment "$PR_NUMBER" --body-file "$RUNNER_TEMP/report.md" || echo "could not comment on the PR"
+
+      - name: Verify and list APKs
+        if: ${{ hashFiles('app/build/outputs/apk/**/*.apk') != '' }}
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          apksigner="$(find "$SDK/build-tools" -name apksigner | sort | tail -n 1)"
+          aapt2="$(find "$SDK/build-tools" -name aapt2 | sort | tail -n 1)"
+          while IFS= read -r apk; do
+            echo "::group::$apk"
+            ls -lh "$apk"
+            pkg="$("$aapt2" dump packagename "$apk")"
+            echo "package: $pkg"
+            # Fork identity check: this must be the Ktv fork, not an upstream-named build.
+            case "$pkg" in
+              app.ktv.reader|app.ktv.reader.debug) echo "OK: Ktv fork identity" ;;
+              *) echo "::error::unexpected package name '$pkg'"; exit 1 ;;
+            esac
+            "$apksigner" verify --print-certs "$apk" || true
+            echo "::endgroup::"
+          done < <(find app/build/outputs/apk -name '*.apk' | sort)
+
+      - name: Enforce stable debug signing
+        # Fork (Ktv): debug builds must all carry the same signature, otherwise a new APK cannot
+        # install over the previous one and the app appears to "fail to install" on the device.
+        if: ${{ hashFiles('app/build/outputs/apk/debug/**/*.apk') != '' }}
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          APKSIGNER="$(find "$SDK/build-tools" -name apksigner | sort | tail -n 1)"
+          APK="$(find app/build/outputs/apk/debug -name '*.apk' | sort | head -n 1)"
+          ACTUAL="$("$APKSIGNER" verify --print-certs "$APK" | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}' | tr 'A-Z' 'a-z')"
+          echo "debug APK signer certificate SHA-256: $ACTUAL"
+          EXPECTED="b4ecb823d5ddc27b0a3c00dec7c6f9576dcea37b9d50f54b74bf0f9f9a80eccc"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::the debug APK is not signed with the committed CI debug key (keystore/ci-debug.keystore)."
+            echo "::error::expected $EXPECTED but got $ACTUAL - a new build would not install over an existing one."
+            exit 1
+          fi
+          echo "::notice::debug builds are signed with the stable CI key, so they update in place"
+
+      - name: Report APK signer fingerprint
+        # Keeps a single updated comment on the PR with the signer fingerprint. Change it only
+        # together with keystore/ci-debug.keystore, and expect it to stay constant across runs.
+        if: ${{ github.event_name == 'pull_request' && hashFiles('app/build/outputs/apk/debug/**/*.apk') != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          APKSIGNER="$(find "$SDK/build-tools" -name apksigner | sort | tail -n 1)"
+          APK="$(find app/build/outputs/apk/debug -name '*.apk' | sort | head -n 1)"
+          FP="$("$APKSIGNER" verify --print-certs "$APK" | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}' | tr 'A-Z' 'a-z')"
+          MARKER='<!-- ktv-apk-signer -->'
+          {
+            echo "$MARKER"
+            echo "**Debug APK signer certificate SHA-256**"
+            echo
+            echo '```'
+            echo "$FP"
+            echo '```'
+            echo
+            echo "Constant across runs means debug APKs install over each other. If this value changes, existing installs must be uninstalled once."
+          } > "$RUNNER_TEMP/signer.md"
+          ID="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --jq "map(select(.body | startswith(\"$MARKER\")))[0].id // empty" 2>/dev/null || true)"
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$ID" -F body=@"$RUNNER_TEMP/signer.md" > /dev/null
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" -F body=@"$RUNNER_TEMP/signer.md" > /dev/null
+          fi
+          echo "reported signer fingerprint $FP"
+
+      - name: Upload APKs
+        if: ${{ hashFiles('app/build/outputs/apk/**/*.apk') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: kotatsu-apks
+          path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload test reports
+        if: ${{ always() && hashFiles('app/build/reports/tests/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-reports
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  release-check:
+    # Fork (Ktv): releases are how self-update is delivered, so keep the R8/minified release
+    # path compiling on every push even though publishing needs the signing secrets.
+    name: Release build check (unsigned)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Install Android SDK components
+        run: |
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          if [ -x "$SDK/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SDKMGR="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          else
+            SDKMGR="$(command -v sdkmanager)"
+          fi
+          yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
+          "$SDKMGR" --install "platforms;android-36" "build-tools;35.0.0" "platform-tools"
+
+      - name: Assemble release (unsigned)
+        run: |
+          set -o pipefail
+          ./gradlew assembleRelease --no-daemon --stacktrace \
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g" 2>&1 | tee "$RUNNER_TEMP/gradle-release.log"
+
+      - name: Report release build failure on the pull request
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          LOG="$RUNNER_TEMP/gradle-release.log"
+          {
+            echo "### ❌ Release build failed"
+            echo ""
+            echo '```'
+            if [ -f "$LOG" ]; then
+              ERRORS="$(grep -Ei '^e: |error:|aapt|failure:|what went wrong|execution failed|caused by|failed|java heap space|outofmemory|\[[A-Za-z]+\]$' "$LOG" | head -60 || true)"
+              if [ -n "$ERRORS" ]; then
+                printf '%s\n' "$ERRORS"
+              else
+                tail -50 "$LOG"
+              fi
+            else
+              echo "no gradle log captured"
+            fi
+            echo '```'
+            echo ""
+            echo "#### lint reports"
+            for f in $(find app/build -name 'lint-results*' -type f 2>/dev/null | head -5); do
+              echo "--- $f"
+              echo '```'
+              if file "$f" | grep -q text; then
+                head -60 "$f"
+              else
+                grep -oE 'id="[^"]*"|message="[^"]*"|file="[^"]*"' "$f" | head -40
+              fi
+              echo '```'
+            done
+          } > "$RUNNER_TEMP/report-release.md"
+          gh pr comment "$PR_NUMBER" --body-file "$RUNNER_TEMP/report-release.md" || echo "could not comment on the PR"
+
+      - name: Verify release APK identity
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          AAPT2="$(find "$SDK/build-tools" -name aapt2 | sort | tail -n 1)"
+          APK="$(find app/build/outputs/apk/release -name '*.apk' | sort | head -n 1)"
+          echo "APK: $APK"
+          ls -lh "$APK"
+          PKG="$("$AAPT2" dump packagename "$APK")"
+          echo "package: $PKG"
+          if [ "$PKG" != "app.ktv.reader" ]; then
+            echo "::error::unexpected package name '$PKG' (expected app.ktv.reader)"
+            exit 1
+          fi
+          echo "::notice::release path builds and reports the Ktv identity"

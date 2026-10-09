@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fork (Ktv): colours for TV focus indication. Kept in a separate file so the fork's additions
+     are easy to find and adjust. Amber reads clearly on both light and dark surfaces. -->
+<resources>
+
+	<color name="ktv_focus_stroke">#FFD54F</color>
+	<color name="ktv_focus_fill">#3DFFD54F</color>
+
+</resources>
