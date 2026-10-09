@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Fork (Ktv): the D-pad mouse pointer. White fill with a dark outline so the cursor stays visible
+  against both light and dark content; a single-colour arrow disappears on half the screens in
+  the app.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+	android:width="28dp"
+	android:height="28dp"
+	android:viewportWidth="24"
+	android:viewportHeight="24">
+
+	<path
+		android:fillColor="#FFFFFFFF"
+		android:pathData="M4,2.5 L4,18 L7.5,14.5 L10.2,20.5 L13.2,19 L10.5,14 L17,14 Z"
+		android:strokeColor="#CC000000"
+		android:strokeLineJoin="round"
+		android:strokeWidth="1.5" />
+
+</vector>

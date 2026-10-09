@@ -105,6 +105,15 @@ code remains with the Kotatsu contributors. Not affiliated with or endorsed by t
   (very subtle) focus highlight otherwise, which made focus hard to see exactly on the busiest
   screens. The ring is 4dp, applied idempotently via the `ktv_focus_ring` view tag, and re-applied
   after the layout pass so toolbar menu items populated later are covered too.
+- `core/ui/RemotePointer.kt` — **added**: a mouse pointer driven by the D-pad. Hold OK to switch it
+  on or off, tap OK to click, hold OK and move the D-pad to drag, Back exits. It draws a cursor
+  into the activity's own window and dispatches synthetic touch events back into that same window,
+  so it needs no permission — `InputManager.injectInputEvent`, the usual way, is system-signed.
+  It is a mode rather than always-on because a D-pad that moves a cursor cannot also move focus.
+  The screens it exists for are the WebView ones (the Cloudflare challenge, source login), where
+  focus navigation cannot click at all. The hold is tracked in `BaseActivity.dispatchKeyEvent`
+  rather than through `onKeyLongPress`, which is never delivered once a focused view has consumed
+  the key down.
 
 **Self-update**
 

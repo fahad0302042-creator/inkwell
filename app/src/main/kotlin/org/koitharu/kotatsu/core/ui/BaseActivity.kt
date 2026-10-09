@@ -38,6 +38,8 @@ abstract class BaseActivity<B : ViewBinding> :
 
 	private var isAmoledTheme = false
 
+	private var pointer: RemotePointer? = null
+
 	lateinit var viewBinding: B
 		private set
 
@@ -79,6 +81,26 @@ abstract class BaseActivity<B : ViewBinding> :
 		putDataToExtras(intent)
 		super.onNewIntent(intent)
 	}
+
+	/**
+	 * Fork (Ktv): the D-pad mouse pointer gets first refusal on every key event. It only claims
+	 * the d-pad and Back, and only while it is switched on, so an ordinary phone or TV session
+	 * never notices it is here. Everything it does not claim goes through untouched — including
+	 * the media keys the reader's auto-play listens for. See [RemotePointer].
+	 */
+	override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+		if (remotePointer().handleKeyEvent(event)) {
+			return true
+		}
+		return super.dispatchKeyEvent(event)
+	}
+
+	override fun onResume() {
+		super.onResume()
+		remotePointer().onResume()
+	}
+
+	private fun remotePointer(): RemotePointer = pointer ?: RemotePointer(this).also { pointer = it }
 
 	@Deprecated("Use ViewBinding", level = DeprecationLevel.ERROR)
 	override fun setContentView(layoutResID: Int) = throw UnsupportedOperationException()

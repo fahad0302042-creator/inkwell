@@ -910,4 +910,5 @@
     <string name="reader_autoplay_continue">Continue to next chapter</string>
     <string name="reader_autoplay_continue_summary">When auto-play reaches the end of a chapter, continue with the next one</string>
     <string name="reader_autoplay_interval">Auto-play delay, seconds</string>
+    <string name="pointer_mode_hint">Pointer mode — D-pad moves, OK clicks, hold OK and move to drag, Back exits</string>
 </resources>
